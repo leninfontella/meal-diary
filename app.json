@@ -5,10 +5,12 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "scheme": "diarioalimentar",
+    "icon": "./assets/app-icon.png",
     "userInterfaceStyle": "light",
     "web": {
       "bundler": "metro",
-      "output": "static"
+      "output": "static",
+      "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-router",

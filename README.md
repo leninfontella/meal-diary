@@ -21,7 +21,12 @@ MVP de diário alimentar em Expo, React Native e TypeScript. O aplicativo usa a 
 ```env
 EXPO_PUBLIC_SUPABASE_URL=https://seu-projeto.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=sua-chave-publica-anon
+EXPO_PUBLIC_SITE_URL=https://seu-dominio.com
 ```
+
+`EXPO_PUBLIC_SITE_URL` deve apontar para a URL pública final do app, sem barra no
+fim. Ela é usada nas tags Open Graph e Twitter Card para montar a URL absoluta
+da imagem exibida ao compartilhar qualquer página.
 
 Os buckets devem permanecer privados. O app cria URLs assinadas de curta duração para exibir as fotos. Os caminhos começam com o ID do usuário, e as políticas impedem acesso a arquivos e registros de outras contas.
 
