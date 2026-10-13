@@ -226,44 +226,44 @@ export default function ProfileScreen() {
     <SafeAreaView style={styles.safe}>
       <Animated.View style={[styles.animatedScreen, { opacity }]}>
         <ImageBackground source={require('../assets/diary-background.png')} resizeMode="cover" style={styles.background}>
-        <KeyboardAvoidingView style={styles.keyboard} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-          <View style={styles.shell}>
-          <ScreenHeader title="Perfil" />
+          <KeyboardAvoidingView style={styles.keyboard} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+            <View style={styles.shell}>
+              <ScreenHeader title="Perfil" />
 
-          <ScrollView
-            automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
-            contentContainerStyle={styles.content}
-            keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
-            keyboardShouldPersistTaps="handled"
-          >
-            <View style={styles.avatarSection}>
-              <Pressable accessibilityLabel="Alterar foto de perfil" onPress={chooseAvatar} style={styles.avatarButton}>
-                {displayedAvatar ? <Image source={displayedAvatar} style={styles.avatar} contentFit="cover" /> : <View style={styles.avatarFallback}><Ionicons name="person" size={58} color={colors.sageDark} /></View>}
-                <View style={styles.cameraBadge}><Ionicons name="camera" size={19} color={colors.white} /></View>
-              </Pressable>
-              <Text style={styles.welcome}>Olá{profile?.name ? `, ${profile.name}` : ''}!</Text>
-              <Text style={styles.welcomeText}>Que bom ter você por aqui.</Text>
-              <Pressable onPress={chooseAvatar} style={styles.changeButton}><Text style={styles.changeText}>Alterar foto</Text></Pressable>
-            </View>
+              <ScrollView
+                automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+                contentContainerStyle={styles.content}
+                keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+                keyboardShouldPersistTaps="handled"
+              >
+                <View style={styles.avatarSection}>
+                  <Pressable accessibilityLabel="Alterar foto de perfil" onPress={chooseAvatar} style={styles.avatarButton}>
+                    {displayedAvatar ? <Image source={displayedAvatar} style={styles.avatar} contentFit="cover" /> : <View style={styles.avatarFallback}><Ionicons name="person" size={58} color={colors.sageDark} /></View>}
+                    <View style={styles.cameraBadge}><Ionicons name="camera" size={19} color={colors.white} /></View>
+                  </Pressable>
+                  <Text style={styles.welcome}>{profile?.name ? `, ${profile.name}` : ''}</Text>
 
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}><View style={styles.sectionIcon}><Ionicons name="leaf-outline" size={25} color={colors.sageDark} /></View><View style={styles.sectionCopy}><Text style={styles.sectionTitle}>Dados pessoais</Text><Text style={styles.sectionDescription}>Mantenha seus dados sempre atualizados.</Text></View></View>
-              <View style={styles.fieldGroup}><Text style={styles.label}>Nome</Text><View style={styles.inputShell}><Ionicons name="person-outline" size={23} color={colors.sageDark} /><TextInput value={name} onChangeText={setName} autoCapitalize="words" maxLength={80} placeholder="Como você quer ser chamado?" placeholderTextColor={colors.muted} style={styles.input} /></View></View>
-              <View style={styles.fieldGroup}><Text style={styles.label}>E-mail</Text><View style={styles.readonly}><Ionicons name="mail-outline" size={23} color={colors.muted} /><Text numberOfLines={1} style={styles.readonlyText}>{user.email}</Text><Ionicons name="lock-closed-outline" size={18} color={colors.muted} /></View></View>
-              <Pressable disabled={saving} onPress={save} style={({ pressed }) => [styles.save, pressed && styles.pressed, saving && styles.disabled]}>
-                {saving ? <ActivityIndicator color={colors.white} /> : <><Ionicons name="checkmark" size={21} color={colors.white} /><Text style={styles.saveText}>Salvar alterações</Text></>}
-              </Pressable>
-            </View>
+                  <Pressable onPress={chooseAvatar} style={styles.changeButton}><Text style={styles.changeText}>Alterar foto</Text></Pressable>
+                </View>
 
-            <View style={styles.accountSection}>
-              <View style={styles.sectionHeader}><View style={styles.sectionIcon}><Ionicons name="shield-checkmark-outline" size={25} color={colors.sageDark} /></View><View style={styles.sectionCopy}><Text style={styles.sectionTitle}>Conta</Text><Text style={styles.sectionDescription}>Gerencie sua conta no Diário Alimentar.</Text></View></View>
-              <Pressable disabled={deleting} onPress={() => void confirmLogout()} style={({ pressed }) => [styles.logout, pressed && styles.pressed, deleting && styles.disabled]}><Ionicons name="log-out-outline" size={22} color={colors.danger} /><Text style={styles.logoutText}>Sair da conta</Text></Pressable>
-              <Pressable disabled={deleting} onPress={() => void deleteAccount()} style={({ pressed }) => [styles.deleteAccount, pressed && styles.pressed, deleting && styles.disabled]}>{deleting ? <ActivityIndicator color={colors.white} /> : <><Ionicons name="trash-outline" size={22} color={colors.white} /><Text style={styles.deleteAccountText}>Excluir conta e todos os dados</Text></>}</Pressable>
+                <View style={styles.section}>
+                  <View style={styles.sectionHeader}><View style={styles.sectionIcon}><Ionicons name="leaf-outline" size={25} color={colors.sageDark} /></View><View style={styles.sectionCopy}><Text style={styles.sectionTitle}>Dados pessoais</Text><Text style={styles.sectionDescription}>Mantenha seus dados sempre atualizados.</Text></View></View>
+                  <View style={styles.fieldGroup}><Text style={styles.label}>Nome</Text><View style={styles.inputShell}><Ionicons name="person-outline" size={23} color={colors.sageDark} /><TextInput value={name} onChangeText={setName} autoCapitalize="words" maxLength={80} placeholder="Como você quer ser chamado?" placeholderTextColor={colors.muted} style={styles.input} /></View></View>
+                  <View style={styles.fieldGroup}><Text style={styles.label}>E-mail</Text><View style={styles.readonly}><Ionicons name="mail-outline" size={23} color={colors.muted} /><Text numberOfLines={1} style={styles.readonlyText}>{user.email}</Text><Ionicons name="lock-closed-outline" size={18} color={colors.muted} /></View></View>
+                  <Pressable disabled={saving} onPress={save} style={({ pressed }) => [styles.save, pressed && styles.pressed, saving && styles.disabled]}>
+                    {saving ? <ActivityIndicator color={colors.white} /> : <><Ionicons name="checkmark" size={21} color={colors.white} /><Text style={styles.saveText}>Salvar alterações</Text></>}
+                  </Pressable>
+                </View>
+
+                <View style={styles.accountSection}>
+                  <View style={styles.sectionHeader}><View style={styles.sectionIcon}><Ionicons name="shield-checkmark-outline" size={25} color={colors.sageDark} /></View><View style={styles.sectionCopy}><Text style={styles.sectionTitle}>Conta</Text><Text style={styles.sectionDescription}>Gerencie sua conta no Diário Alimentar.</Text></View></View>
+                  <Pressable disabled={deleting} onPress={() => void confirmLogout()} style={({ pressed }) => [styles.logout, pressed && styles.pressed, deleting && styles.disabled]}><Ionicons name="log-out-outline" size={22} color={colors.danger} /><Text style={styles.logoutText}>Sair da conta</Text></Pressable>
+                  <Pressable disabled={deleting} onPress={() => void deleteAccount()} style={({ pressed }) => [styles.deleteAccount, pressed && styles.pressed, deleting && styles.disabled]}>{deleting ? <ActivityIndicator color={colors.white} /> : <><Ionicons name="trash-outline" size={22} color={colors.white} /><Text style={styles.deleteAccountText}>Excluir conta e todos os dados</Text></>}</Pressable>
+                </View>
+              </ScrollView>
+              <BottomNavigation />
             </View>
-          </ScrollView>
-          <BottomNavigation />
-          </View>
-        </KeyboardAvoidingView>
+          </KeyboardAvoidingView>
         </ImageBackground>
       </Animated.View>
       <PhotoSourceModal

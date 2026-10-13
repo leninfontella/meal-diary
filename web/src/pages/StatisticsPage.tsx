@@ -1,5 +1,5 @@
-import { BarChart3, CalendarDays, Flame, Utensils } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { BarChart3, CalendarDays, Flame, Utensils } from 'lucide-react';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';

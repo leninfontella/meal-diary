@@ -451,9 +451,14 @@ a {
 }
 
 @keyframes leaf-pulse {
-  0% { opacity: 0; transform: scale(0.88); }
-  22%, 78% { opacity: 1; transform: scale(1); }
-  100% { opacity: 0; transform: scale(0.94); }
+  0% { opacity: 0; transform: scale(0.78); }
+  14% { opacity: 1; transform: scale(1); }
+  30% { opacity: 1; transform: scale(0.88); }
+  46% { opacity: 1; transform: scale(1.08); }
+  62% { opacity: 1; transform: scale(0.9); }
+  78% { opacity: 1; transform: scale(1.06); }
+  88% { opacity: 1; transform: scale(0.96); }
+  100% { opacity: 0; transform: scale(0.86); }
 }
 
 .editor-panel .form-input-icon input {
@@ -613,15 +618,17 @@ a {
 }
 
 .meal-action-sheet {
-  gap: 14px;
+  width: min(100%, 560px);
+  gap: 0;
   padding: 10px 18px 18px;
-  border-radius: 30px;
+  border-radius: 28px;
+  box-shadow: 0 -5px 22px rgba(32, 39, 30, 0.16);
 }
 
 .meal-action-sheet > i {
   width: 42px;
   height: 4px;
-  margin: 0 auto 12px;
+  margin: 0 auto 18px;
   border-radius: 2px;
   background: #d5d3ca;
 }
@@ -629,15 +636,16 @@ a {
 .meal-action-sheet header {
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin-bottom: 8px;
+  gap: 13px;
+  padding: 0 5px;
+  margin-bottom: 17px;
 }
 
 .meal-action-sheet header > span,
 .meal-action-sheet > button > span {
   flex: 0 0 auto;
-  width: 52px;
-  height: 52px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   background: #e4e9df;
   color: #61745b;
@@ -650,23 +658,45 @@ a {
   margin: 0;
 }
 
+.meal-action-sheet header h2 {
+  font-size: 18px;
+}
+
 .meal-action-sheet header p {
   margin-top: 3px;
   color: #77736a;
+  font-size: 13px;
 }
 
 .meal-action-sheet > button {
-  min-height: 70px;
-  padding: 0 14px;
+  min-height: 64px;
+  padding: 0 13px;
   display: flex;
   align-items: center;
-  gap: 13px;
+  gap: 11px;
+  margin-bottom: 9px;
   text-align: left;
 }
 
-.meal-action-sheet > button strong {
+.meal-action-sheet > button > span {
+  width: 40px;
+  height: 40px;
+}
+
+.meal-action-sheet > button > div {
   flex: 1;
+  display: grid;
+  gap: 2px;
+}
+
+.meal-action-sheet > button strong {
   font-size: 16px;
+}
+
+.meal-action-sheet > button small {
+  color: #77736a;
+  font-size: 12px;
+  font-weight: 400;
 }
 
 .meal-action-sheet > button.danger > span {
@@ -674,8 +704,13 @@ a {
   background: #f3e2de;
 }
 
+.meal-action-sheet > button.danger small {
+  color: #a66a62;
+}
+
 .meal-action-sheet > button.cancel {
   min-height: 48px;
+  margin-bottom: 0;
   justify-content: center;
   border: 0;
   background: transparent;
@@ -798,22 +833,43 @@ a {
   }
 
   .meal-action-sheet {
-    gap: 12px;
     padding: 9px 15px 15px;
+    border-radius: 24px;
   }
 
-  .meal-action-sheet header > span,
-  .meal-action-sheet > button > span {
-    width: 44px;
-    height: 44px;
+  .meal-action-sheet header > span {
+    width: 41px;
+    height: 41px;
+  }
+
+  .meal-action-sheet header h2 {
+    font-size: 15px;
+  }
+
+  .meal-action-sheet header p {
+    font-size: 11px;
   }
 
   .meal-action-sheet > button {
-    min-height: 60px;
+    min-height: 54px;
+    border-radius: 13px;
+  }
+
+  .meal-action-sheet > button > span {
+    width: 34px;
+    height: 34px;
   }
 
   .meal-action-sheet > button strong {
     font-size: 14px;
+  }
+
+  .meal-action-sheet > button small {
+    font-size: 10px;
+  }
+
+  .meal-action-sheet > button.cancel {
+    min-height: 43px;
   }
 
   .editor-page .form-row {

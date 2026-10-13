@@ -1,5 +1,5 @@
-import { Apple, CalendarDays, Camera, Check, Clock3, Coffee, CookingPot, Image as ImageIcon, Leaf, MoreHorizontal, Trash2, Utensils } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { Apple, CalendarDays, Camera, Check, Clock3, Coffee, CookingPot, Image as ImageIcon, Leaf, MoreHorizontal, Trash2, Utensils } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { PhotoSourceModal } from '../components/PhotoSourceModal';
