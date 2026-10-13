@@ -129,7 +129,7 @@ export default function MemoriesScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#F7F5ED' },
   background: { flex: 1, width: '100%' },
-  shell: { flex: 1, width: '100%', maxWidth: 760, alignSelf: 'center' },
+  shell: { flex: 1, width: '100%', maxWidth: 680, alignSelf: 'center' },
   content: { paddingHorizontal: 18, paddingTop: 2, paddingBottom: 122, gap: 20 },
   subtitle: { maxWidth: 420, color: colors.muted, fontSize: 15, lineHeight: 21, textAlign: 'center' },
   filters: { gap: 8, paddingHorizontal: 1 },

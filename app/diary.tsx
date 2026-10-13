@@ -167,7 +167,7 @@ export default function DiaryScreen() {
             ) : meals.length === 0 ? (
               <View style={styles.empty}><View style={styles.emptyIcon}><Ionicons name="restaurant-outline" size={31} color={colors.sageDark} /></View><Text style={styles.emptyTitle}>Nenhuma refeição neste dia</Text><Text style={styles.emptyText}>Toque na câmera para adicionar a primeira.</Text></View>
             ) : (
-              <View style={styles.list}>{meals.map((meal) => <MealCard fullWidth={compact} key={meal.id} meal={meal} onLongPress={() => openMealOptions(meal)} onPress={() => router.push({ pathname: '/meal/[id]', params: { id: meal.id } })} />)}</View>
+              <View style={styles.list}>{meals.map((meal) => <MealCard key={meal.id} meal={meal} onLongPress={() => openMealOptions(meal)} onPress={() => router.push({ pathname: '/meal/[id]', params: { id: meal.id } })} />)}</View>
             )}
 
           </ScrollView>
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#F7F5ED' },
   animatedScreen: { flex: 1 },
   background: { flex: 1, width: '100%' },
-  shell: { flex: 1, width: '100%', maxWidth: 720, alignSelf: 'center' },
+  shell: { flex: 1, width: '100%', maxWidth: 680, alignSelf: 'center' },
   content: { flexGrow: 1, paddingHorizontal: 27, paddingTop: 25, paddingBottom: 118 },
   contentCompact: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 102 },
   header: { paddingTop: 4 },

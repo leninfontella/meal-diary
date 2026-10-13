@@ -203,7 +203,7 @@ function Legend({ color, label }: { color: string; label: string }) {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#F7F5ED' },
   background: { flex: 1, width: '100%' },
-  shell: { flex: 1, width: '100%', maxWidth: 760, alignSelf: 'center' },
+  shell: { flex: 1, width: '100%', maxWidth: 680, alignSelf: 'center' },
   content: { paddingHorizontal: 18, paddingTop: 2, paddingBottom: 122, gap: 18 },
   subtitle: { color: colors.muted, fontSize: 15, textAlign: 'center' },
   segmented: { height: 52, borderRadius: 26, padding: 4, flexDirection: 'row', backgroundColor: 'rgba(250, 248, 241, 0.94)', borderWidth: 1, borderColor: colors.line, ...shadow },

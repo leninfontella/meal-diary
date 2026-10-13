@@ -16,6 +16,28 @@ export default function RootHtml({ children }: { children: ReactNode }) {
         <meta name="apple-mobile-web-app-title" content="Diário Alimentar" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/app-icon.png" />
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+              @media (max-width: 430px) and (display-mode: browser) {
+                @supports (-webkit-touch-callout: none) {
+                  body {
+                    box-sizing: border-box;
+                    padding-top: max(62px, env(safe-area-inset-top));
+                  }
+                }
+              }
+
+              input:-webkit-autofill,
+              input:-webkit-autofill:hover,
+              input:-webkit-autofill:focus {
+                -webkit-text-fill-color: #252720;
+                -webkit-box-shadow: 0 0 0 1000px #f8f6ef inset;
+                transition: background-color 9999s ease-out 0s;
+              }
+            `,
+          }}
+        />
         <ScrollViewStyleReset />
         {headNodes}
       </head>
