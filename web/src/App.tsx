@@ -7,12 +7,13 @@ import { MealPage } from './pages/MealPage';
 import { MemoriesPage } from './pages/MemoriesPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { StatisticsPage } from './pages/StatisticsPage';
+import { WelcomePage } from './pages/WelcomePage';
 
 export function App() {
   return <Routes>
+    <Route path="/" element={<WelcomePage />} />
     <Route path="/auth" element={<AuthPage />} />
     <Route element={<ProtectedRoute />}><Route element={<AppLayout />}>
-      <Route index element={<Navigate to="/diary" replace />} />
       <Route path="/diary" element={<DiaryPage />} />
       <Route path="/memories" element={<MemoriesPage />} />
       <Route path="/statistics" element={<StatisticsPage />} />

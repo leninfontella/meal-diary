@@ -6,8 +6,9 @@ import { App } from './App';
 import { AuthProvider } from './contexts/AuthContext';
 import { ConfirmDialogProvider } from './contexts/ConfirmDialogContext';
 import { ToastProvider } from './contexts/ToastContext';
+import { TransitionProvider } from './contexts/TransitionContext';
 import './styles.css';
 import './header.css';
 
 registerSW({ immediate: true });
-createRoot(document.getElementById('root')!).render(<StrictMode><BrowserRouter><AuthProvider><ConfirmDialogProvider><ToastProvider><App /></ToastProvider></ConfirmDialogProvider></AuthProvider></BrowserRouter></StrictMode>);
+createRoot(document.getElementById('root')!).render(<StrictMode><BrowserRouter><TransitionProvider><AuthProvider><ConfirmDialogProvider><ToastProvider><App /></ToastProvider></ConfirmDialogProvider></AuthProvider></TransitionProvider></BrowserRouter></StrictMode>);

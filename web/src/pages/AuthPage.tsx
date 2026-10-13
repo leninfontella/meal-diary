@@ -1,21 +1,26 @@
 import { ArrowRight, Eye, EyeOff, Leaf, LockKeyhole, Mail, UserRound } from 'lucide-react';
 import { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { FaApple, FaGooglePlay } from 'react-icons/fa';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
+import { useTransition } from '../contexts/TransitionContext';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
 
 export function AuthPage() {
   const { user, loading: authLoading } = useAuth();
+  const [searchParams] = useSearchParams();
   const { notify } = useToast();
-  const [signup, setSignup] = useState(false);
+  const { play } = useTransition();
+  const [signup, setSignup] = useState(() => searchParams.get('mode') === 'signup');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [transitioning, setTransitioning] = useState(false);
   const [error, setError] = useState('');
-  if (!authLoading && user) return <Navigate to="/diary" replace />;
+  if (!authLoading && user && !transitioning) return <Navigate to="/diary" replace />;
 
   async function submit(event: React.FormEvent) {
     event.preventDefault(); setError('');
@@ -32,10 +37,27 @@ export function AuthPage() {
       if (result.data.session) await supabase.auth.signOut();
       setSignup(false); setPassword('');
       notify({ tone: 'success', title: 'Conta criada', message: 'Confirme seu e-mail, se solicitado, e faça login.' });
+    } else {
+      setTransitioning(true);
+      await play();
+      setTransitioning(false);
     }
   }
 
   return <main className="auth-page">
+    <section className="desktop-auth-notice">
+      <div className="desktop-auth-visual">
+        <img src="/desktop-mobile-experience.png" alt="Refeição colorida servida em cerâmica artesanal, ao lado de um diário" />
+      </div>
+      <div className="desktop-auth-content">
+        <span className="desktop-auth-mark"><Leaf /></span>
+        <p className="desktop-auth-eyebrow">Diário Alimentar</p>
+        <h1>Uma experiência feita para o celular</h1>
+        <p className="desktop-auth-copy">Para aproveitar melhor o registro por fotos, a câmera e o diário no dia a dia, acesse este site pelo seu celular.</p>
+        <div className="desktop-auth-stores" aria-label="Disponibilidade futura nas lojas oficiais"><div><FaApple /><span><small>Em breve na</small><strong>App Store</strong></span></div><div><FaGooglePlay /><span><small>Em breve no</small><strong>Google Play</strong></span></div></div>
+        <p className="desktop-auth-footnote">Em breve também disponível nas lojas oficiais da Apple e do Google.</p>
+      </div>
+    </section>
     <section className="auth-hero"><div className="brand-mark"><Leaf /></div><h1>Diário Alimentar</h1><p>Suas refeições, do seu jeito.</p></section>
     <section className="auth-sheet"><form onSubmit={submit} className="auth-form">
       {signup && <h2>Crie sua conta</h2>}
