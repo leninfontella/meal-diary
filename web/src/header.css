@@ -8,12 +8,238 @@ a {
 }
 
 .screen-header {
-  margin-inline: calc(var(--page-gutter) * -1);
+  position: fixed;
+  top: 0;
+  left: 50%;
+  width: min(100%, 680px);
+  margin-inline: 0;
   padding-inline: var(--page-gutter);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -110%);
+  transition: opacity 180ms ease, transform 220ms ease;
+}
+
+.screen-header.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+}
+
+.meal-action-sheet {
+  gap: 14px;
+  padding: 10px 18px 18px;
+  border-radius: 30px;
+}
+
+.meal-action-sheet > i {
+  width: 42px;
+  height: 4px;
+  margin: 0 auto 12px;
+  border-radius: 2px;
+  background: #d5d3ca;
+}
+
+.meal-action-sheet header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+
+.meal-action-sheet header > span,
+.meal-action-sheet > button > span {
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #e4e9df;
+  color: #61745b;
+  display: grid;
+  place-items: center;
+}
+
+.meal-action-sheet header h2,
+.meal-action-sheet header p {
+  margin: 0;
+}
+
+.meal-action-sheet header p {
+  margin-top: 3px;
+  color: #77736a;
+}
+
+.meal-action-sheet > button {
+  min-height: 70px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  text-align: left;
+}
+
+.meal-action-sheet > button strong {
+  flex: 1;
+  font-size: 16px;
+}
+
+.meal-action-sheet > button.danger > span {
+  color: #a34f45;
+  background: #f3e2de;
+}
+
+.meal-action-sheet > button.cancel {
+  min-height: 48px;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: #77736a;
+  font-weight: 700;
 }
 
 @media (max-width: 719px) {
   .page {
     --page-gutter: 15px;
+  }
+
+  .diary-header {
+    padding-top: 17px;
+    padding-bottom: 14px;
+  }
+
+  .diary-header h1 {
+    font-size: 19px;
+  }
+
+  .diary-header p {
+    font-size: 11px;
+  }
+
+  .avatar-small {
+    width: 39px;
+    height: 39px;
+  }
+
+  .week-card {
+    width: 90%;
+    margin-inline: auto;
+    padding: 15px 12px;
+    border-radius: 19px;
+  }
+
+  .week-title h2 {
+    font-size: 18px;
+  }
+
+  .week-days {
+    margin-top: 13px;
+  }
+
+  .week-days span {
+    font-size: 10px;
+  }
+
+  .week-days strong {
+    font-size: 15px;
+  }
+
+  .diary-page .meal-grid,
+  .memory-grid {
+    width: 90%;
+    margin-inline: auto;
+  }
+
+  .meal-card > div,
+  .memory-grid span {
+    padding: 8px;
+  }
+
+  .memory-group h2 {
+    font-size: 17px;
+  }
+
+  .memory-group > div:first-child {
+    width: 90%;
+    margin-inline: auto;
+  }
+
+  .profile-page .profile-hero {
+    padding: 20px 14px;
+    margin-bottom: 17px;
+    border-radius: 20px;
+  }
+
+  .profile-page .profile-avatar {
+    width: 91px;
+    height: 91px;
+  }
+
+  .profile-page .profile-avatar > span {
+    width: 28px;
+    height: 28px;
+  }
+
+  .profile-page .profile-avatar > svg {
+    width: 42px;
+    height: 42px;
+  }
+
+  .profile-page .profile-hero h2 {
+    margin-top: 12px;
+    font-size: 17px;
+  }
+
+  .profile-page .profile-form,
+  .profile-page .account-panel {
+    gap: 13px;
+    margin-bottom: 17px;
+    padding: 16px;
+  }
+
+  .profile-page .profile-form h2,
+  .profile-page .account-panel h2 {
+    font-size: 15px;
+  }
+
+  .profile-page .profile-form input,
+  .profile-page .readonly {
+    height: 46px;
+  }
+
+  .profile-page .primary-button,
+  .profile-page .outline-danger,
+  .profile-page .danger-button {
+    min-height: 44px;
+  }
+
+  .meal-action-sheet {
+    gap: 12px;
+    padding: 9px 15px 15px;
+  }
+
+  .meal-action-sheet header > span,
+  .meal-action-sheet > button > span {
+    width: 44px;
+    height: 44px;
+  }
+
+  .meal-action-sheet > button {
+    min-height: 60px;
+  }
+
+  .meal-action-sheet > button strong {
+    font-size: 14px;
+  }
+}
+
+@media (min-width: 720px) {
+  .screen-header {
+    top: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen-header {
+    transition: none;
   }
 }

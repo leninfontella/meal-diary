@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Leaf, MoreVertical, UserRound } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Leaf, MoreVertical, SquarePen, Trash2, Utensils, UserRound } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -40,7 +40,7 @@ export function DiaryPage() {
     <section className="week-card"><div className="week-title"><h2>{monthName(selected)}</h2><div><button onClick={() => moveWeek(-7)}><ChevronLeft /></button><button onClick={() => moveWeek(7)}><ChevronRight /></button></div></div><div className="week-days">{week.map((day) => <button key={day.key} className={day.key === toDateKey(selected) ? 'selected' : ''} onClick={() => setSelected(day.date)}><span>{day.weekday}</span><strong>{day.date.getDate()}</strong><i className={recorded.has(day.key) ? 'marked' : ''} /></button>)}</div></section>
     <div className="day-summary"><Leaf /><span>{meals.length} {meals.length === 1 ? 'refeição' : 'refeições'} {toDateKey(selected) === toDateKey(new Date()) ? 'hoje' : 'neste dia'}</span><ChevronRight /></div>
     {loading ? <div className="inline-loader" /> : meals.length ? <div className="meal-grid">{meals.map((meal) => <DiaryMealCard key={meal.id} meal={meal} onPress={() => navigate(`/meal/${meal.id}`)} onLongPress={() => setMenuMeal(meal)} />)}</div> : <div className="empty-state"><Leaf /><h3>Nenhuma refeição neste dia</h3><p>Toque em Adicionar para registrar a primeira.</p></div>}
-    {menuMeal && <div className="modal-backdrop" onClick={() => setMenuMeal(null)}><div className="action-sheet" onClick={(e) => e.stopPropagation()}><h2>{menuMeal.meal_type || 'Refeição'}</h2><button onClick={() => navigate(`/meal/${menuMeal.id}`)}>Editar publicação</button><button className="danger" onClick={() => void remove(menuMeal)}>Excluir publicação</button><button onClick={() => setMenuMeal(null)}>Cancelar</button></div></div>}
+    {menuMeal && <div className="modal-backdrop" onClick={() => setMenuMeal(null)}><div className="action-sheet meal-action-sheet" onClick={(e) => e.stopPropagation()}><i aria-hidden="true" /><header><span><Utensils /></span><div><h2>{menuMeal.meal_type || 'Refeição'}</h2><p>Escolha uma opção para esta publicação.</p></div></header><button onClick={() => navigate(`/meal/${menuMeal.id}`)}><span><SquarePen /></span><strong>Editar publicação</strong><ChevronRight /></button><button className="danger" onClick={() => void remove(menuMeal)}><span><Trash2 /></span><strong>Excluir publicação</strong><ChevronRight /></button><button className="cancel" onClick={() => setMenuMeal(null)}>Cancelar</button></div></div>}
   </div>;
 }
 
