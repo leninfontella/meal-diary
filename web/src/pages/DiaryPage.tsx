@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, Leaf, MoreVertical, UserRound } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useConfirmDialog } from '../contexts/ConfirmDialogContext';
@@ -39,7 +39,31 @@ export function DiaryPage() {
   return <div className="page diary-page"><header className="diary-header"><div><h1>Olá{name ? `, ${name}` : ''}!</h1><p>Seu diário alimentar.</p></div><button className="avatar-small" onClick={() => navigate('/profile')}>{avatar ? <img src={avatar} alt="Perfil" /> : <UserRound />}</button></header>
     <section className="week-card"><div className="week-title"><h2>{monthName(selected)}</h2><div><button onClick={() => moveWeek(-7)}><ChevronLeft /></button><button onClick={() => moveWeek(7)}><ChevronRight /></button></div></div><div className="week-days">{week.map((day) => <button key={day.key} className={day.key === toDateKey(selected) ? 'selected' : ''} onClick={() => setSelected(day.date)}><span>{day.weekday}</span><strong>{day.date.getDate()}</strong><i className={recorded.has(day.key) ? 'marked' : ''} /></button>)}</div></section>
     <div className="day-summary"><Leaf /><span>{meals.length} {meals.length === 1 ? 'refeição' : 'refeições'} {toDateKey(selected) === toDateKey(new Date()) ? 'hoje' : 'neste dia'}</span><ChevronRight /></div>
-    {loading ? <div className="inline-loader" /> : meals.length ? <div className="meal-grid">{meals.map((meal) => <article className="meal-card" key={meal.id} onClick={() => setMenuMeal(meal)}><img src={meal.imageUrl} alt={meal.meal_type || 'Refeição'} /><div><span><strong>{meal.meal_type || 'Refeição'}</strong><small>{meal.meal_time.slice(0, 5)}</small></span><MoreVertical /></div></article>)}</div> : <div className="empty-state"><Leaf /><h3>Nenhuma refeição neste dia</h3><p>Toque em Adicionar para registrar a primeira.</p></div>}
+    {loading ? <div className="inline-loader" /> : meals.length ? <div className="meal-grid">{meals.map((meal) => <DiaryMealCard key={meal.id} meal={meal} onPress={() => navigate(`/meal/${meal.id}`)} onLongPress={() => setMenuMeal(meal)} />)}</div> : <div className="empty-state"><Leaf /><h3>Nenhuma refeição neste dia</h3><p>Toque em Adicionar para registrar a primeira.</p></div>}
     {menuMeal && <div className="modal-backdrop" onClick={() => setMenuMeal(null)}><div className="action-sheet" onClick={(e) => e.stopPropagation()}><h2>{menuMeal.meal_type || 'Refeição'}</h2><button onClick={() => navigate(`/meal/${menuMeal.id}`)}>Editar publicação</button><button className="danger" onClick={() => void remove(menuMeal)}>Excluir publicação</button><button onClick={() => setMenuMeal(null)}>Cancelar</button></div></div>}
   </div>;
+}
+
+function DiaryMealCard({ meal, onPress, onLongPress }: { meal: Meal; onPress: () => void; onLongPress: () => void }) {
+  const timer = useRef<number | null>(null);
+  const longPressTriggered = useRef(false);
+  const clearTimer = () => { if (timer.current !== null) window.clearTimeout(timer.current); timer.current = null; };
+  const startPress = () => {
+    clearTimer(); longPressTriggered.current = false;
+    timer.current = window.setTimeout(() => { longPressTriggered.current = true; onLongPress(); }, 450);
+  };
+  const finishPress = () => clearTimer();
+  return <article
+    className="meal-card"
+    role="button"
+    tabIndex={0}
+    aria-label={`Abrir ${meal.meal_type || 'refeição'}`}
+    onPointerDown={startPress}
+    onPointerUp={finishPress}
+    onPointerCancel={finishPress}
+    onPointerLeave={finishPress}
+    onClick={(event) => { if (longPressTriggered.current) { event.preventDefault(); longPressTriggered.current = false; return; } onPress(); }}
+    onContextMenu={(event) => { event.preventDefault(); clearTimer(); onLongPress(); }}
+    onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onPress(); } }}
+  ><img src={meal.imageUrl} alt={meal.meal_type || 'Refeição'} draggable={false} /><div><span><strong>{meal.meal_type || 'Refeição'}</strong><small>{meal.meal_time.slice(0, 5)}</small></span><MoreVertical /></div></article>;
 }

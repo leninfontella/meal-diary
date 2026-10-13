@@ -7,6 +7,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ConfirmDialogProvider } from './contexts/ConfirmDialogContext';
 import { ToastProvider } from './contexts/ToastContext';
 import './styles.css';
+import './header.css';
 
 registerSW({ immediate: true });
 createRoot(document.getElementById('root')!).render(<StrictMode><BrowserRouter><AuthProvider><ConfirmDialogProvider><ToastProvider><App /></ToastProvider></ConfirmDialogProvider></AuthProvider></BrowserRouter></StrictMode>);
