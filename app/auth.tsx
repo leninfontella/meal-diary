@@ -62,9 +62,11 @@ export default function AuthScreen() {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [messageTone, setMessageTone] = useState<'error' | 'info'>('error');
 
   async function submit() {
     setMessage('');
+    setMessageTone('error');
     if (!isSupabaseConfigured) {
       setMessage('Configure as variáveis do Supabase no arquivo .env.');
       notify({ type: 'error', title: 'Supabase não configurado', message: 'Preencha as variáveis no arquivo .env.' });
@@ -90,9 +92,15 @@ export default function AuthScreen() {
     if (result.error) {
       setMessage(result.error.message);
       notify({ type: 'error', title: isSignUp ? 'Cadastro não concluído' : 'Não foi possível entrar', message: result.error.message });
-    } else if (isSignUp && !result.data.session) {
-      setMessage('Confira seu e-mail para confirmar o cadastro.');
-      notify({ type: 'info', title: 'Confirme seu e-mail', message: 'Enviamos um link para concluir o cadastro.', duration: 5000 });
+    } else if (isSignUp) {
+      if (result.data.session) await supabase.auth.signOut();
+      setIsSignUp(false);
+      setPassword('');
+      setPasswordVisible(false);
+      const needsConfirmation = !result.data.session;
+      setMessageTone('info');
+      setMessage(needsConfirmation ? 'Cadastro concluído. Confirme seu e-mail e depois entre na sua conta.' : 'Cadastro concluído. Entre com seu e-mail e senha.');
+      notify({ type: needsConfirmation ? 'info' : 'success', title: needsConfirmation ? 'Confirme seu e-mail' : 'Conta criada', message: needsConfirmation ? 'Depois da confirmação, volte para fazer login.' : 'Agora entre com os dados cadastrados.', duration: 5000 });
     } else {
       notify({ type: 'success', title: isSignUp ? 'Conta criada' : 'Login realizado', message: 'Seu diário está pronto.' });
       await fadeOut();
@@ -103,6 +111,7 @@ export default function AuthScreen() {
   function switchMode() {
     setIsSignUp((value) => !value);
     setMessage('');
+    setMessageTone('error');
     setPasswordVisible(false);
   }
 
@@ -110,8 +119,14 @@ export default function AuthScreen() {
     <SafeAreaView style={styles.safe}>
       <Animated.View style={[styles.animatedScreen, { opacity }]}>
         <ImageBackground source={require('../assets/auth-background.png')} resizeMode="cover" style={styles.background}>
-        <KeyboardAvoidingView style={styles.keyboard} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <KeyboardAvoidingView style={styles.keyboard} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+          <ScrollView
+            automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+            contentContainerStyle={styles.page}
+            keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
             <View style={styles.hero}>
               <View style={styles.mark}><Ionicons name="leaf-outline" size={36} color="#405238" /></View>
               <Text style={styles.brandTitle}>Diário Alimentar</Text>
@@ -157,7 +172,7 @@ export default function AuthScreen() {
                   onToggleVisibility={() => setPasswordVisible((value) => !value)}
                 />
 
-                {!!message && <Text style={styles.message}>{message}</Text>}
+                {!!message && <Text style={[styles.message, messageTone === 'info' && styles.messageInfo]}>{message}</Text>}
 
                 <Pressable onPress={submit} disabled={loading} style={({ pressed }) => [styles.primary, pressed && styles.pressed, loading && styles.disabled]}>
                   <View style={styles.buttonSide} />
@@ -204,6 +219,7 @@ const styles = StyleSheet.create({
   input: { flex: 1, height: '100%', color: '#252720', fontSize: 16, paddingVertical: 0 },
   eyeButton: { width: 42, height: 42, alignItems: 'center', justifyContent: 'center' },
   message: { color: colors.danger, fontSize: 13, lineHeight: 18, marginTop: -7 },
+  messageInfo: { color: colors.sageDark },
   primary: { height: 62, borderRadius: 14, backgroundColor: '#415936', paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 2, shadowColor: '#273121', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.18, shadowRadius: 14, elevation: 4 },
   buttonSide: { width: 30, alignItems: 'center' },
   primaryText: { color: colors.white, fontSize: 16, fontWeight: '700' },

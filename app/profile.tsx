@@ -1,11 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { Redirect, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Animated,
   ImageBackground,
   KeyboardAvoidingView,
@@ -20,6 +20,9 @@ import {
 } from 'react-native';
 
 import { ScreenLoader } from '@/components/ScreenLoader';
+import { BottomNavigation } from '@/components/BottomNavigation';
+import { PhotoSourceModal } from '@/components/PhotoSourceModal';
+import { ScreenHeader } from '@/components/ScreenHeader';
 import { colors } from '@/constants/theme';
 import { useScreenFade } from '@/hooks/useScreenFade';
 import { supabase } from '@/lib/supabase';
@@ -41,6 +44,8 @@ export default function ProfileScreen() {
   const [avatarUrl, setAvatarUrl] = useState<string>();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [photoSourceVisible, setPhotoSourceVisible] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -86,11 +91,7 @@ export default function ProfileScreen() {
       void openLibrary();
       return;
     }
-    Alert.alert('Foto de perfil', 'Escolha de onde vem a imagem.', [
-      { text: 'Câmera', onPress: () => void openCamera() },
-      { text: 'Galeria', onPress: () => void openLibrary() },
-      { text: 'Cancelar', style: 'cancel' },
-    ]);
+    setPhotoSourceVisible(true);
   }
 
   async function uploadAvatar(asset: ImagePicker.ImagePickerAsset) {
@@ -157,6 +158,54 @@ export default function ProfileScreen() {
     if (confirmed) await logout();
   }
 
+  async function removeUserFiles(bucket: 'meal-photos' | 'profile-photos') {
+    if (!user) return;
+    const paths: string[] = [];
+    for (let offset = 0; ; offset += 100) {
+      const { data, error } = await supabase.storage.from(bucket).list(user.id, { limit: 100, offset, sortBy: { column: 'name', order: 'asc' } });
+      if (error) throw error;
+      const files = (data ?? []).filter((item) => Boolean(item.id));
+      paths.push(...files.map((item) => `${user.id}/${item.name}`));
+      if ((data ?? []).length < 100) break;
+    }
+    for (let index = 0; index < paths.length; index += 100) {
+      const { error } = await supabase.storage.from(bucket).remove(paths.slice(index, index + 100));
+      if (error) throw error;
+    }
+  }
+
+  async function deleteAccount() {
+    if (!user || deleting) return;
+    const firstConfirmation = await confirm({
+      title: 'Excluir sua conta?',
+      message: 'Todas as refeições, fotografias, observações, perfil e histórico serão apagados permanentemente.',
+      confirmLabel: 'Continuar',
+      tone: 'danger',
+    });
+    if (!firstConfirmation) return;
+    const finalConfirmation = await confirm({
+      title: 'Esta ação é definitiva',
+      message: 'Não será possível recuperar sua conta ou suas fotos. Deseja excluir tudo agora?',
+      confirmLabel: 'Excluir tudo',
+      tone: 'danger',
+    });
+    if (!finalConfirmation) return;
+
+    setDeleting(true);
+    try {
+      await Promise.all([removeUserFiles('meal-photos'), removeUserFiles('profile-photos')]);
+      const { error } = await supabase.rpc('delete_own_account');
+      if (error) throw error;
+      if (Platform.OS !== 'web') void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      await supabase.auth.signOut({ scope: 'local' });
+      notify({ type: 'success', title: 'Conta excluída', message: 'Seus dados e fotografias foram removidos.' });
+      router.replace('/auth');
+    } catch (deleteError) {
+      notify({ type: 'error', title: 'Não foi possível excluir a conta', message: deleteError instanceof Error ? deleteError.message : 'Tente novamente.' });
+      setDeleting(false);
+    }
+  }
+
   if (authLoading || loading) return <ScreenLoader />;
   if (!user) return <Redirect href="/auth" />;
 
@@ -166,15 +215,16 @@ export default function ProfileScreen() {
     <SafeAreaView style={styles.safe}>
       <Animated.View style={[styles.animatedScreen, { opacity }]}>
         <ImageBackground source={require('../assets/diary-background.png')} resizeMode="cover" style={styles.background}>
-        <KeyboardAvoidingView style={styles.keyboard} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <KeyboardAvoidingView style={styles.keyboard} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <View style={styles.shell}>
-          <View style={styles.header}>
-            <Pressable accessibilityLabel="Voltar" onPress={() => router.back()} style={styles.iconButton}><Ionicons name="arrow-back" size={25} color={colors.sageDark} /></Pressable>
-            <Text style={styles.title}>Perfil</Text>
-            <View style={styles.iconButton} />
-          </View>
+          <ScreenHeader title="Perfil" />
 
-          <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <ScrollView
+            automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+            contentContainerStyle={styles.content}
+            keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+            keyboardShouldPersistTaps="handled"
+          >
             <View style={styles.avatarSection}>
               <Pressable accessibilityLabel="Alterar foto de perfil" onPress={chooseAvatar} style={styles.avatarButton}>
                 {displayedAvatar ? <Image source={displayedAvatar} style={styles.avatar} contentFit="cover" /> : <View style={styles.avatarFallback}><Ionicons name="person" size={58} color={colors.sageDark} /></View>}
@@ -196,13 +246,23 @@ export default function ProfileScreen() {
 
             <View style={styles.accountSection}>
               <View style={styles.sectionHeader}><View style={styles.sectionIcon}><Ionicons name="shield-checkmark-outline" size={25} color={colors.sageDark} /></View><View style={styles.sectionCopy}><Text style={styles.sectionTitle}>Conta</Text><Text style={styles.sectionDescription}>Gerencie sua conta no Diário Alimentar.</Text></View></View>
-              <Pressable onPress={() => void confirmLogout()} style={({ pressed }) => [styles.logout, pressed && styles.pressed]}><Ionicons name="log-out-outline" size={22} color={colors.danger} /><Text style={styles.logoutText}>Sair da conta</Text></Pressable>
+              <Pressable disabled={deleting} onPress={() => void confirmLogout()} style={({ pressed }) => [styles.logout, pressed && styles.pressed, deleting && styles.disabled]}><Ionicons name="log-out-outline" size={22} color={colors.danger} /><Text style={styles.logoutText}>Sair da conta</Text></Pressable>
+              <Pressable disabled={deleting} onPress={() => void deleteAccount()} style={({ pressed }) => [styles.deleteAccount, pressed && styles.pressed, deleting && styles.disabled]}>{deleting ? <ActivityIndicator color={colors.white} /> : <><Ionicons name="trash-outline" size={22} color={colors.white} /><Text style={styles.deleteAccountText}>Excluir conta e todos os dados</Text></>}</Pressable>
             </View>
           </ScrollView>
+          <BottomNavigation />
           </View>
         </KeyboardAvoidingView>
         </ImageBackground>
       </Animated.View>
+      <PhotoSourceModal
+        description="Escolha de onde vem sua nova foto de perfil."
+        onCamera={() => void openCamera()}
+        onClose={() => setPhotoSourceVisible(false)}
+        onLibrary={() => void openLibrary()}
+        title="Alterar foto"
+        visible={photoSourceVisible}
+      />
     </SafeAreaView>
   );
 }
@@ -213,10 +273,7 @@ const styles = StyleSheet.create({
   background: { flex: 1, width: '100%' },
   keyboard: { flex: 1 },
   shell: { flex: 1, width: '100%', maxWidth: 680, alignSelf: 'center' },
-  header: { minHeight: 72, paddingHorizontal: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  iconButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  title: { color: colors.ink, fontSize: 20, fontWeight: '600' },
-  content: { paddingHorizontal: 18, paddingBottom: 40, gap: 20 },
+  content: { paddingHorizontal: 18, paddingBottom: 118, gap: 20 },
   avatarSection: { alignItems: 'center', borderRadius: 28, backgroundColor: 'rgba(250, 248, 241, 0.94)', paddingVertical: 30, paddingHorizontal: 20, shadowColor: '#514F43', shadowOffset: { width: 0, height: 7 }, shadowOpacity: 0.08, shadowRadius: 18, elevation: 2 },
   avatarButton: { width: 126, height: 126 },
   avatar: { width: 126, height: 126, borderRadius: 63, backgroundColor: colors.sageLight },
@@ -243,6 +300,8 @@ const styles = StyleSheet.create({
   saveText: { color: colors.white, fontSize: 16, fontWeight: '700' },
   logout: { minHeight: 58, borderRadius: 13, borderWidth: 1, borderColor: '#E2B8B0', backgroundColor: '#F9ECE9', paddingHorizontal: 18, flexDirection: 'row', alignItems: 'center', gap: 11 },
   logoutText: { color: colors.danger, fontSize: 16, fontWeight: '700' },
+  deleteAccount: { minHeight: 58, borderRadius: 13, backgroundColor: colors.danger, paddingHorizontal: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 11 },
+  deleteAccountText: { color: colors.white, fontSize: 15, fontWeight: '700' },
   pressed: { opacity: 0.8 },
   disabled: { opacity: 0.65 },
 });

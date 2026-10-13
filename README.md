@@ -12,7 +12,7 @@ MVP de diário alimentar em Expo, React Native e TypeScript. O aplicativo usa a 
 ## Configuração do Supabase
 
 1. Crie ou abra um projeto no [Supabase](https://supabase.com/dashboard).
-2. Abra **SQL Editor**, cole o conteúdo de `supabase/setup.sql` e execute-o. O script cria as tabelas `meals` e `profiles`, índices, RLS, políticas e os buckets privados `meal-photos` e `profile-photos`.
+2. Abra **SQL Editor**, cole o conteúdo de `supabase/setup.sql` e execute-o. O script cria as tabelas `meals` e `profiles`, índices, RLS, políticas, os buckets privados `meal-photos` e `profile-photos` e a função protegida de exclusão da própria conta.
 3. Em **Authentication > Providers > Email**, mantenha o provedor Email habilitado.
 4. Para desenvolvimento local imediato, desative **Confirm email**. Se mantiver a confirmação ativa, configure os templates e URLs de redirecionamento e confirme o e-mail antes do primeiro login.
 5. Em **Project Settings > API**, copie a Project URL e a chave pública `anon`/`publishable`. Nunca use a chave `service_role` no aplicativo.

@@ -1,11 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useNavigation, useRouter } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   ImageBackground,
   KeyboardAvoidingView,
   Platform,
@@ -19,6 +18,9 @@ import {
 } from 'react-native';
 
 import { ScreenLoader } from '@/components/ScreenLoader';
+import { BottomNavigation } from '@/components/BottomNavigation';
+import { PhotoSourceModal } from '@/components/PhotoSourceModal';
+import { ScreenHeader } from '@/components/ScreenHeader';
 import { colors } from '@/constants/theme';
 import { currentTime, toDateKey } from '@/lib/date';
 import { supabase } from '@/lib/supabase';
@@ -27,7 +29,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { useConfirmDialog } from '@/providers/ConfirmDialogProvider';
 import { useNotification } from '@/providers/NotificationProvider';
 
-type Props = { mealId?: string; initialDate?: string };
+type Props = { mealId?: string; initialDate?: string; initialPhoto?: ImagePicker.ImagePickerAsset };
 
 const mealIcons: Record<MealType, keyof typeof Ionicons.glyphMap> = {
   'Café da manhã': 'cafe-outline',
@@ -37,21 +39,46 @@ const mealIcons: Record<MealType, keyof typeof Ionicons.glyphMap> = {
   'Outro': 'ellipsis-horizontal',
 };
 
-export function MealEditor({ mealId, initialDate }: Props) {
+export function MealEditor({ mealId, initialDate, initialPhoto }: Props) {
   const router = useRouter();
+  const navigation = useNavigation();
   const { user } = useAuth();
   const { confirm } = useConfirmDialog();
   const { notify } = useNotification();
+  const [initialValues] = useState(() => ({ date: initialDate || toDateKey(new Date()), time: currentTime() }));
+  const allowExit = useRef(false);
+  const exitPromptOpen = useRef(false);
   const [meal, setMeal] = useState<Meal | null>(null);
-  const [photo, setPhoto] = useState<ImagePicker.ImagePickerAsset | null>(null);
+  const [photo, setPhoto] = useState<ImagePicker.ImagePickerAsset | null>(initialPhoto ?? null);
   const [imageUrl, setImageUrl] = useState<string>();
-  const [date, setDate] = useState(initialDate || toDateKey(new Date()));
-  const [time, setTime] = useState(currentTime());
+  const [date, setDate] = useState(initialValues.date);
+  const [time, setTime] = useState(initialValues.time);
   const [type, setType] = useState<MealType | null>(null);
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(Boolean(mealId));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [photoSourceVisible, setPhotoSourceVisible] = useState(false);
+  const hasUnsavedChanges = !mealId && Boolean(photo || type || note.trim() || date !== initialValues.date || time !== initialValues.time);
+
+  useEffect(() => navigation.addListener('beforeRemove', (event) => {
+    if (allowExit.current || !hasUnsavedChanges) return;
+    event.preventDefault();
+    if (exitPromptOpen.current) return;
+    exitPromptOpen.current = true;
+    void (async () => {
+      const confirmed = await confirm({
+        title: 'Sair sem salvar?',
+        message: 'Deseja sair sem salvar esta refeição? A foto e os dados preenchidos serão descartados.',
+        confirmLabel: 'Sair sem salvar',
+        tone: 'danger',
+      });
+      exitPromptOpen.current = false;
+      if (!confirmed) return;
+      allowExit.current = true;
+      navigation.dispatch(event.data.action);
+    })();
+  }), [confirm, hasUnsavedChanges, navigation]);
 
   useEffect(() => {
     if (!mealId) return;
@@ -109,11 +136,7 @@ export function MealEditor({ mealId, initialDate }: Props) {
       void openLibrary();
       return;
     }
-    Alert.alert('Adicionar foto', 'Escolha de onde vem a imagem.', [
-      { text: 'Câmera', onPress: () => void openCamera() },
-      { text: 'Galeria', onPress: () => void openLibrary() },
-      { text: 'Cancelar', style: 'cancel' },
-    ]);
+    setPhotoSourceVisible(true);
   }
 
   async function uploadPhoto(asset: ImagePicker.ImagePickerAsset) {
@@ -157,6 +180,7 @@ export function MealEditor({ mealId, initialDate }: Props) {
         }
       }
       notify({ type: 'success', title: mealId ? 'Refeição atualizada' : 'Refeição adicionada', message: mealId ? 'As alterações foram salvas.' : 'A foto já está no seu diário.' });
+      allowExit.current = true;
       router.replace('/diary');
     } catch (saveError) {
       const message = saveError instanceof Error ? saveError.message : 'Não foi possível salvar a refeição.';
@@ -195,15 +219,19 @@ export function MealEditor({ mealId, initialDate }: Props) {
   return (
     <SafeAreaView style={styles.safe}>
       <ImageBackground source={require('../assets/diary-background.png')} resizeMode="cover" style={styles.background}>
-        <KeyboardAvoidingView style={styles.keyboard} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <KeyboardAvoidingView style={styles.keyboard} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <View style={styles.shell}>
-          <View style={styles.header}>
-            <Pressable accessibilityLabel="Voltar" onPress={() => router.back()} style={styles.iconButton}><Ionicons name="chevron-back" size={26} color={colors.sageDark} /></Pressable>
-            <Text style={styles.title}>{mealId ? 'Sua refeição' : 'Nova refeição'}</Text>
-            {mealId ? <Pressable accessibilityLabel="Excluir refeição" onPress={() => void confirmRemove()} style={styles.iconButton}><Ionicons name="trash-outline" size={22} color={colors.danger} /></Pressable> : <View style={styles.iconButton} />}
-          </View>
+          <ScreenHeader
+            right={mealId ? <Pressable accessibilityLabel="Excluir refeição" onPress={() => void confirmRemove()} style={styles.headerAction}><Ionicons name="trash-outline" size={22} color={colors.danger} /></Pressable> : undefined}
+            title={mealId ? 'Sua refeição' : 'Nova refeição'}
+          />
 
-          <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <ScrollView
+            automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+            contentContainerStyle={styles.content}
+            keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+            keyboardShouldPersistTaps="handled"
+          >
             <View style={styles.panel}>
               <Pressable onPress={!mealId ? choosePhoto : undefined} style={[styles.photoArea, (photo || imageUrl) && styles.photoAreaFilled]}>
                 {photo || imageUrl ? (
@@ -241,9 +269,18 @@ export function MealEditor({ mealId, initialDate }: Props) {
               </Pressable>
             </View>
           </ScrollView>
+          <BottomNavigation addDate={date} />
           </View>
         </KeyboardAvoidingView>
       </ImageBackground>
+      <PhotoSourceModal
+        description="Escolha como deseja adicionar a fotografia da refeição."
+        onCamera={() => void openCamera()}
+        onClose={() => setPhotoSourceVisible(false)}
+        onLibrary={() => void openLibrary()}
+        title={photo || imageUrl ? 'Trocar foto' : 'Adicionar foto'}
+        visible={photoSourceVisible}
+      />
     </SafeAreaView>
   );
 }
@@ -253,10 +290,8 @@ const styles = StyleSheet.create({
   background: { flex: 1, width: '100%' },
   keyboard: { flex: 1 },
   shell: { flex: 1, width: '100%', maxWidth: 680, alignSelf: 'center' },
-  header: { minHeight: 86, paddingHorizontal: 22, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  iconButton: { width: 46, height: 46, borderRadius: 23, backgroundColor: 'rgba(229, 233, 220, 0.92)', alignItems: 'center', justifyContent: 'center' },
-  title: { flex: 1, color: '#20351E', fontSize: 26, fontWeight: '600', marginLeft: 16 },
-  content: { paddingHorizontal: 18, paddingBottom: 38 },
+  headerAction: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(229, 233, 220, 0.92)', alignItems: 'center', justifyContent: 'center' },
+  content: { paddingHorizontal: 18, paddingBottom: 118 },
   panel: { borderRadius: 28, backgroundColor: 'rgba(250, 248, 241, 0.96)', padding: 24, gap: 23, shadowColor: '#514F43', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.1, shadowRadius: 20, elevation: 3 },
   photoArea: { width: '100%', aspectRatio: 1.55, borderRadius: 17, borderWidth: 1, borderStyle: 'dashed', borderColor: '#AEBCA3', overflow: 'hidden', backgroundColor: 'rgba(237, 241, 230, 0.72)' },
   photoAreaFilled: { borderStyle: 'solid', borderColor: colors.line },

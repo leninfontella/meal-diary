@@ -7,6 +7,9 @@
     "scheme": "diarioalimentar",
     "icon": "./assets/app-icon.png",
     "userInterfaceStyle": "light",
+    "android": {
+      "softwareKeyboardLayoutMode": "resize"
+    },
     "web": {
       "bundler": "metro",
       "output": "static",

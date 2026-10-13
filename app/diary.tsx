@@ -1,31 +1,37 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { Redirect, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Animated, ImageBackground, Pressable, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Animated, ImageBackground, Modal, Platform, Pressable, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { MealCard } from '@/components/MealCard';
+import { BottomNavigation } from '@/components/BottomNavigation';
 import { ScreenLoader } from '@/components/ScreenLoader';
 import { WeekCalendar } from '@/components/WeekCalendar';
-import { colors, shadow } from '@/constants/theme';
+import { colors } from '@/constants/theme';
 import { useScreenFade } from '@/hooks/useScreenFade';
-import { toDateKey } from '@/lib/date';
+import { getWeek, toDateKey } from '@/lib/date';
 import { supabase } from '@/lib/supabase';
 import type { Meal } from '@/lib/types';
 import { useAuth } from '@/providers/AuthProvider';
+import { useConfirmDialog } from '@/providers/ConfirmDialogProvider';
 import { useNotification } from '@/providers/NotificationProvider';
 
 export default function DiaryScreen() {
   const router = useRouter();
   const { opacity } = useScreenFade();
   const { loading: authLoading, user } = useAuth();
+  const { confirm } = useConfirmDialog();
   const { notify } = useNotification();
   const [selected, setSelected] = useState(new Date());
   const [displayName, setDisplayName] = useState<string>(() => String(user?.user_metadata?.name ?? '').trim());
   const [avatarUrl, setAvatarUrl] = useState<string>();
   const [meals, setMeals] = useState<Meal[]>([]);
+  const [recordedDates, setRecordedDates] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [actionMeal, setActionMeal] = useState<Meal | null>(null);
 
   const loadMeals = useCallback(async () => {
     if (!user) return;
@@ -65,19 +71,62 @@ export default function DiaryScreen() {
     }
   }, [user]);
 
+  const loadRecordedDates = useCallback(async () => {
+    if (!user) return;
+    const week = getWeek(selected);
+    const { data } = await supabase
+      .from('meals')
+      .select('meal_date')
+      .eq('user_id', user.id)
+      .gte('meal_date', week[0].key)
+      .lte('meal_date', week[week.length - 1].key);
+    setRecordedDates(new Set((data ?? []).map((item) => item.meal_date)));
+  }, [selected, user]);
+
+  const removeMeal = useCallback(async (meal: Meal) => {
+    const { error: deleteError } = await supabase.from('meals').delete().eq('id', meal.id);
+    if (deleteError) {
+      notify({ type: 'error', title: 'Não foi possível excluir', message: deleteError.message });
+      return;
+    }
+    const { error: storageError } = await supabase.storage.from('meal-photos').remove([meal.photo_path]);
+    setMeals((current) => current.filter((item) => item.id !== meal.id));
+    void loadRecordedDates();
+    if (storageError) {
+      notify({ type: 'info', title: 'Refeição excluída', message: 'O registro foi removido, mas a limpeza da foto precisará ser tentada novamente.' });
+    } else {
+      if (Platform.OS !== 'web') void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      notify({ type: 'success', title: 'Publicação excluída', message: 'A refeição e a fotografia foram removidas.' });
+    }
+  }, [loadRecordedDates, notify]);
+
+  const confirmMealRemoval = useCallback(async (meal: Meal) => {
+    setActionMeal(null);
+    const confirmed = await confirm({
+      title: 'Excluir publicação?',
+      message: 'A fotografia e a observação serão removidas definitivamente.',
+      confirmLabel: 'Excluir',
+      tone: 'danger',
+    });
+    if (confirmed) await removeMeal(meal);
+  }, [confirm, removeMeal]);
+
+  const openMealOptions = useCallback((meal: Meal) => {
+    if (Platform.OS === 'web') return;
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setActionMeal(meal);
+  }, []);
+
   useFocusEffect(useCallback(() => {
     setLoading(true);
-    void loadMeals();
-    void loadProfile();
-  }, [loadMeals, loadProfile]));
+    void Promise.all([loadMeals(), loadProfile(), loadRecordedDates()]);
+  }, [loadMeals, loadProfile, loadRecordedDates]));
 
   if (authLoading) return <ScreenLoader />;
   if (!user) return <Redirect href="/auth" />;
 
   const selectedIsToday = toDateKey(selected) === toDateKey(new Date());
   const mealCountText = `${meals.length} ${meals.length === 1 ? 'refeição' : 'refeições'} ${selectedIsToday ? 'hoje' : 'neste dia'}`;
-  const addRoute = { pathname: '/meal/new' as const, params: { date: toDateKey(selected) } };
-
   return (
     <SafeAreaView style={styles.safe}>
       <Animated.View style={[styles.animatedScreen, { opacity }]}>
@@ -85,7 +134,7 @@ export default function DiaryScreen() {
         <View style={styles.shell}>
           <ScrollView
             contentContainerStyle={styles.content}
-            refreshControl={<RefreshControl refreshing={loading && meals.length > 0} onRefresh={loadMeals} tintColor={colors.sageDark} />}
+            refreshControl={<RefreshControl refreshing={loading && meals.length > 0} onRefresh={() => void Promise.all([loadMeals(), loadRecordedDates()])} tintColor={colors.sageDark} />}
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.header}>
@@ -100,7 +149,7 @@ export default function DiaryScreen() {
               </View>
             </View>
 
-            <WeekCalendar selected={selected} onSelect={setSelected} />
+            <WeekCalendar markedDates={recordedDates} selected={selected} onSelect={setSelected} />
 
             <View style={styles.summary}>
               <View style={styles.summaryIcon}><Ionicons name="leaf" size={22} color={colors.sageDark} /></View>
@@ -115,23 +164,30 @@ export default function DiaryScreen() {
             ) : meals.length === 0 ? (
               <View style={styles.empty}><View style={styles.emptyIcon}><Ionicons name="restaurant-outline" size={31} color={colors.sageDark} /></View><Text style={styles.emptyTitle}>Nenhuma refeição neste dia</Text><Text style={styles.emptyText}>Toque na câmera para adicionar a primeira.</Text></View>
             ) : (
-              <View style={styles.list}>{meals.map((meal) => <MealCard key={meal.id} meal={meal} onPress={() => router.push({ pathname: '/meal/[id]', params: { id: meal.id } })} />)}</View>
+              <View style={styles.list}>{meals.map((meal) => <MealCard key={meal.id} meal={meal} onLongPress={() => openMealOptions(meal)} onPress={() => router.push({ pathname: '/meal/[id]', params: { id: meal.id } })} />)}</View>
             )}
 
           </ScrollView>
 
-          <View style={styles.bottomBar}>
-            <View style={styles.navItem}><Ionicons name="home" size={24} color="#284D27" /><Text style={styles.navActive}>Início</Text></View>
-            <View style={styles.barSpacer} />
-            <Pressable accessibilityLabel="Abrir perfil" onPress={() => router.push('/profile')} style={styles.navItem}><Ionicons name="person-outline" size={25} color="#78856F" /><Text style={styles.navText}>Perfil</Text></Pressable>
-          </View>
-          <Pressable accessibilityLabel="Adicionar foto" onPress={() => router.push(addRoute)} style={({ pressed }) => [styles.addButton, pressed && styles.addPressed]}>
-            <Ionicons name="camera" size={28} color={colors.white} />
-            <Text style={styles.addText}>Adicionar</Text>
-          </Pressable>
+          <BottomNavigation addDate={toDateKey(selected)} />
         </View>
         </ImageBackground>
       </Animated.View>
+
+      <Modal visible={Boolean(actionMeal)} transparent animationType="fade" onRequestClose={() => setActionMeal(null)}>
+        <Pressable style={styles.modalBackdrop} onPress={() => setActionMeal(null)}>
+          <Pressable style={styles.actionSheet} onPress={(event) => event.stopPropagation()}>
+            <View style={styles.actionHandle} />
+            <View style={styles.actionHeader}>
+              <View style={styles.actionIcon}><Ionicons name="restaurant-outline" size={24} color={colors.sageDark} /></View>
+              <View style={styles.actionCopy}><Text style={styles.actionTitle}>{actionMeal?.meal_type || 'Refeição'}</Text><Text style={styles.actionSubtitle}>Escolha uma opção para esta publicação.</Text></View>
+            </View>
+            <Pressable onPress={() => { const meal = actionMeal; setActionMeal(null); if (meal) router.push({ pathname: '/meal/[id]', params: { id: meal.id } }); }} style={({ pressed }) => [styles.actionButton, pressed && styles.actionPressed]}><View style={styles.actionButtonIcon}><Ionicons name="create-outline" size={22} color={colors.sageDark} /></View><Text style={styles.actionButtonText}>Editar publicação</Text><Ionicons name="chevron-forward" size={20} color={colors.muted} /></Pressable>
+            <Pressable onPress={() => actionMeal && void confirmMealRemoval(actionMeal)} style={({ pressed }) => [styles.actionButton, styles.deleteButton, pressed && styles.actionPressed]}><View style={[styles.actionButtonIcon, styles.deleteIcon]}><Ionicons name="trash-outline" size={22} color={colors.danger} /></View><Text style={[styles.actionButtonText, styles.deleteText]}>Excluir publicação</Text><Ionicons name="chevron-forward" size={20} color={colors.danger} /></Pressable>
+            <Pressable onPress={() => setActionMeal(null)} style={({ pressed }) => [styles.cancelButton, pressed && styles.actionPressed]}><Text style={styles.cancelText}>Cancelar</Text></Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -159,12 +215,21 @@ const styles = StyleSheet.create({
   emptyTitle: { color: colors.ink, fontSize: 18, fontWeight: '600', textAlign: 'center', marginTop: 14 },
   emptyText: { color: colors.muted, fontSize: 15, textAlign: 'center', marginTop: 7 },
   retry: { color: colors.sageDark, fontWeight: '700', marginTop: 16 },
-  bottomBar: { position: 'absolute', left: 16, right: 16, bottom: 8, height: 72, borderRadius: 24, backgroundColor: 'rgba(255, 255, 255, 0.94)', paddingHorizontal: 32, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', ...shadow },
-  navItem: { width: 64, height: 58, alignItems: 'center', justifyContent: 'center', gap: 2 },
-  navActive: { color: '#284D27', fontSize: 12, fontWeight: '700' },
-  navText: { color: '#78856F', fontSize: 12 },
-  barSpacer: { width: 78 },
-  addButton: { position: 'absolute', bottom: 15, left: '50%', transform: [{ translateX: -41 }], width: 82, height: 82, borderRadius: 41, backgroundColor: '#78976C', borderWidth: 5, borderColor: '#F4F3EB', alignItems: 'center', justifyContent: 'center', ...shadow },
-  addPressed: { transform: [{ translateX: -41 }, { scale: 0.96 }] },
-  addText: { color: colors.white, fontSize: 11, fontWeight: '600', marginTop: 1 },
+  modalBackdrop: { flex: 1, backgroundColor: 'rgba(29, 37, 27, 0.56)', justifyContent: 'flex-end', padding: 14 },
+  actionSheet: { width: '100%', maxWidth: 560, alignSelf: 'center', borderRadius: 28, backgroundColor: '#FAF8F1', paddingHorizontal: 18, paddingTop: 10, paddingBottom: 18, shadowColor: '#20271E', shadowOffset: { width: 0, height: -5 }, shadowOpacity: 0.16, shadowRadius: 22, elevation: 10 },
+  actionHandle: { width: 42, height: 4, borderRadius: 2, backgroundColor: '#D5D3CA', alignSelf: 'center', marginBottom: 18 },
+  actionHeader: { flexDirection: 'row', alignItems: 'center', gap: 13, paddingHorizontal: 5, marginBottom: 17 },
+  actionIcon: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.sageLight, alignItems: 'center', justifyContent: 'center' },
+  actionCopy: { flex: 1, gap: 3 },
+  actionTitle: { color: colors.ink, fontSize: 18, fontWeight: '700' },
+  actionSubtitle: { color: colors.muted, fontSize: 13, lineHeight: 18 },
+  actionButton: { minHeight: 58, borderRadius: 15, borderWidth: 1, borderColor: colors.line, backgroundColor: '#FFFFFF', paddingHorizontal: 13, flexDirection: 'row', alignItems: 'center', gap: 11, marginBottom: 9 },
+  actionButtonIcon: { width: 38, height: 38, borderRadius: 19, backgroundColor: colors.sageLight, alignItems: 'center', justifyContent: 'center' },
+  actionButtonText: { flex: 1, color: colors.ink, fontSize: 15, fontWeight: '600' },
+  deleteButton: { borderColor: '#E7C5BF', backgroundColor: '#FCF3F1' },
+  deleteIcon: { backgroundColor: '#F3E2DE' },
+  deleteText: { color: colors.danger },
+  cancelButton: { height: 50, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginTop: 2 },
+  cancelText: { color: colors.muted, fontSize: 15, fontWeight: '600' },
+  actionPressed: { opacity: 0.72 },
 });

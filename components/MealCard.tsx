@@ -5,11 +5,11 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, shadow } from '@/constants/theme';
 import type { Meal } from '@/lib/types';
 
-type Props = { meal: Meal; onPress: () => void };
+type Props = { meal: Meal; onPress: () => void; onLongPress?: () => void };
 
-export function MealCard({ meal, onPress }: Props) {
+export function MealCard({ meal, onPress, onLongPress }: Props) {
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={`Abrir ${meal.meal_type ?? 'refeição'}`} onPress={onPress} style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
+    <Pressable accessibilityRole="button" accessibilityLabel={`Abrir ${meal.meal_type ?? 'refeição'}`} delayLongPress={450} onLongPress={onLongPress} onPress={onPress} style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
       <Image source={meal.imageUrl} style={styles.image} contentFit="cover" transition={180} />
       <View style={styles.details}>
         <View style={styles.copy}>

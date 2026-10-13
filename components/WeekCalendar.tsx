@@ -4,12 +4,11 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors } from '@/constants/theme';
 import { getWeek, monthName, toDateKey } from '@/lib/date';
 
-type Props = { selected: Date; onSelect: (date: Date) => void };
+type Props = { selected: Date; onSelect: (date: Date) => void; markedDates?: Set<string> };
 
-export function WeekCalendar({ selected, onSelect }: Props) {
+export function WeekCalendar({ selected, onSelect, markedDates }: Props) {
   const days = getWeek(selected);
   const selectedKey = toDateKey(selected);
-  const todayKey = toDateKey(new Date());
   const moveWeek = (amount: number) => {
     const next = new Date(selected);
     next.setDate(selected.getDate() + amount * 7);
@@ -34,7 +33,7 @@ export function WeekCalendar({ selected, onSelect }: Props) {
                 <Text style={[styles.weekday, active && styles.activeText]}>{item.weekday}</Text>
                 <Text style={[styles.number, active && styles.activeText]}>{item.date.getDate()}</Text>
               </Pressable>
-              {item.key === todayKey && !active && <View style={styles.todayDot} />}
+              {markedDates?.has(item.key) && <View accessibilityLabel="Dia com refeição registrada" style={styles.recordDot} />}
             </View>
           );
         })}
@@ -44,7 +43,7 @@ export function WeekCalendar({ selected, onSelect }: Props) {
 }
 
 const styles = StyleSheet.create({
-  wrapper: { paddingTop: 24, paddingBottom: 24, borderBottomWidth: 1, borderBottomColor: '#D8D9CE' },
+  wrapper: { marginTop: 18, paddingHorizontal: 15, paddingTop: 18, paddingBottom: 18, borderWidth: 1, borderColor: 'rgba(216, 217, 206, 0.72)', borderRadius: 24, backgroundColor: 'rgba(250, 248, 241, 0.82)', shadowColor: '#514F43', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.06, shadowRadius: 14, elevation: 2 },
   monthRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   month: { color: '#183017', fontSize: 24, fontWeight: '600' },
   arrows: { flexDirection: 'row', gap: 12 },
@@ -56,5 +55,5 @@ const styles = StyleSheet.create({
   weekday: { color: '#30432D', fontSize: 13 },
   number: { color: '#172616', fontSize: 20, fontWeight: '400' },
   activeText: { color: colors.white },
-  todayDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: colors.sage, marginTop: 7 },
+  recordDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: '#68845F', marginTop: 7 },
 });
