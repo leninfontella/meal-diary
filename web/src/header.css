@@ -739,11 +739,6 @@ a {
     margin-inline: auto;
   }
 
-  .meal-card > div,
-  .memory-grid span {
-    padding: 8px;
-  }
-
   .memory-group h2 {
     font-size: 17px;
   }

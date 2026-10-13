@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Leaf, MoreVertical, SquarePen, Trash2, Utensils, UserRound } from 'lucide-react';
+import { Apple, ChevronLeft, ChevronRight, Coffee, CookingPot, Ellipsis, Leaf, MoreHorizontal, SquarePen, Trash2, Utensils, UserRound } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -20,7 +20,7 @@ export function DiaryPage() {
       supabase.from('meals').select('meal_date').eq('user_id', user.id).gte('meal_date', week[0].key).lte('meal_date', week[6].key),
       supabase.from('profiles').select('name, avatar_path').eq('user_id', user.id).maybeSingle()
     ]);
-    if (mealResult.error) notify({ tone: 'error', title: 'Erro ao carregar', message: mealResult.error.message });
+    if (mealResult.error) notify({ tone: 'error', title: 'Erro ao carregar', message: 'Não foi possível buscar as refeições deste dia.' });
     const rows = (mealResult.data ?? []) as Meal[];
     const signed = await Promise.all(rows.map(async (meal) => ({ ...meal, imageUrl: (await supabase.storage.from('meal-photos').createSignedUrl(meal.photo_path, 3600)).data?.signedUrl })));
     setMeals(signed); setRecorded(new Set((datesResult.data ?? []).map((item) => item.meal_date)));
@@ -33,7 +33,8 @@ export function DiaryPage() {
   async function remove(meal: Meal) {
     if (!await confirm({ title: 'Excluir publicação?', message: 'A fotografia e a observação serão removidas definitivamente.', confirmLabel: 'Excluir', tone: 'danger' })) return;
     const { error } = await supabase.from('meals').delete().eq('id', meal.id); if (error) return notify({ tone: 'error', title: 'Não foi possível excluir', message: error.message });
-    await supabase.storage.from('meal-photos').remove([meal.photo_path]); setMenuMeal(null); void load();
+    const { error: storageError } = await supabase.storage.from('meal-photos').remove([meal.photo_path]); setMenuMeal(null); void load();
+    notify(storageError ? { tone: 'info', title: 'Refeição excluída', message: 'O registro foi removido, mas a limpeza da foto precisará ser tentada novamente.' } : { tone: 'success', title: 'Publicação excluída', message: 'A refeição e a fotografia foram removidas.' });
   }
   const week = getWeek(selected);
   return <div className="page diary-page"><header className="diary-header"><div><h1>Olá{name ? `, ${name}` : ''}!</h1><p>Seu diário alimentar.</p></div><button className="avatar-small" onClick={() => navigate('/profile')}>{avatar ? <img src={avatar} alt="Perfil" /> : <UserRound />}</button></header>
@@ -65,5 +66,31 @@ function DiaryMealCard({ meal, onPress, onLongPress }: { meal: Meal; onPress: ()
     onClick={(event) => { if (longPressTriggered.current) { event.preventDefault(); longPressTriggered.current = false; return; } onPress(); }}
     onContextMenu={(event) => { event.preventDefault(); clearTimer(); onLongPress(); }}
     onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onPress(); } }}
-  ><img src={meal.imageUrl} alt={meal.meal_type || 'Refeição'} draggable={false} /><div><span><strong>{meal.meal_type || 'Refeição'}</strong><small>{meal.meal_time.slice(0, 5)}</small></span><MoreVertical /></div></article>;
+  >
+    <div className="meal-card-photo">
+      <img src={meal.imageUrl} alt={meal.meal_type || 'Refeição'} draggable={false} />
+      <button
+        type="button"
+        className="meal-card-menu"
+        aria-label={`Opções de ${meal.meal_type || 'refeição'}`}
+        onPointerDown={(event) => { event.stopPropagation(); clearTimer(); }}
+        onClick={(event) => { event.stopPropagation(); onLongPress(); }}
+      ><MoreHorizontal /></button>
+    </div>
+    <div className="meal-card-body">
+      <div className="meal-card-meta">
+        <span className="meal-card-type-icon"><MealTypeIcon type={meal.meal_type} /></span>
+        <span><strong>{meal.meal_type || 'Refeição'}</strong><small>{meal.meal_time.slice(0, 5)}</small></span>
+      </div>
+      <p>{meal.note?.trim() || '\u00a0'}</p>
+    </div>
+  </article>;
+}
+
+function MealTypeIcon({ type }: { type: Meal['meal_type'] }) {
+  if (type === 'Café da manhã') return <Coffee />;
+  if (type === 'Almoço') return <Utensils />;
+  if (type === 'Lanche') return <Apple />;
+  if (type === 'Jantar') return <CookingPot />;
+  return <Ellipsis />;
 }

@@ -24,20 +24,22 @@ export function AuthPage() {
 
   async function submit(event: React.FormEvent) {
     event.preventDefault(); setError('');
-    if (!isSupabaseConfigured) return setError('Configure as variáveis do Supabase em web/.env.');
-    if (signup && name.trim().length < 2) return setError('Informe seu nome com pelo menos 2 caracteres.');
-    if (!email.trim() || password.length < 6) return setError('Informe um e-mail válido e uma senha com pelo menos 6 caracteres.');
+    if (!isSupabaseConfigured) { setError('Configure as variáveis do Supabase em web/.env.'); notify({ tone: 'error', title: 'Supabase não configurado', message: 'Preencha as variáveis no arquivo .env.' }); return; }
+    if (signup && name.trim().length < 2) { setError('Informe seu nome com pelo menos 2 caracteres.'); notify({ tone: 'error', title: 'Confira seu nome', message: 'Informe pelo menos 2 caracteres.' }); return; }
+    if (!email.trim() || password.length < 6) { setError('Informe um e-mail válido e uma senha com pelo menos 6 caracteres.'); notify({ tone: 'error', title: 'Confira os dados', message: 'Use um e-mail válido e uma senha com pelo menos 6 caracteres.' }); return; }
     setLoading(true);
     const result = signup
       ? await supabase.auth.signUp({ email: email.trim(), password, options: { data: { name: name.trim() } } })
       : await supabase.auth.signInWithPassword({ email: email.trim(), password });
     setLoading(false);
-    if (result.error) return setError(result.error.message);
+    if (result.error) { setError(result.error.message); notify({ tone: 'error', title: signup ? 'Cadastro não concluído' : 'Não foi possível entrar', message: result.error.message }); return; }
     if (signup) {
+      const needsConfirmation = !result.data.session;
       if (result.data.session) await supabase.auth.signOut();
       setSignup(false); setPassword('');
-      notify({ tone: 'success', title: 'Conta criada', message: 'Confirme seu e-mail, se solicitado, e faça login.' });
+      notify({ tone: needsConfirmation ? 'info' : 'success', title: needsConfirmation ? 'Confirme seu e-mail' : 'Conta criada', message: needsConfirmation ? 'Depois da confirmação, volte para fazer login.' : 'Agora entre com os dados cadastrados.', duration: 5000 });
     } else {
+      notify({ tone: 'success', title: 'Login realizado', message: 'Seu diário está pronto.' });
       setTransitioning(true);
       await play();
       setTransitioning(false);
