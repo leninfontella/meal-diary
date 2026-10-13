@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Camera, Check, Leaf, LogOut, Mail, ShieldCheck, Trash2, UserRound } from 'lucide-react';
+import { Camera, Check, Leaf, LogOut, Mail, Palette, ShieldCheck, Trash2, UserRound } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { PhotoSourceModal } from '../components/PhotoSourceModal';
@@ -7,11 +7,13 @@ import { useAuth } from '../contexts/AuthContext';
 import { useConfirmDialog } from '../contexts/ConfirmDialogContext';
 import { useToast } from '../contexts/ToastContext';
 import { useTransition } from '../contexts/TransitionContext';
+import { useTheme, type ThemeName } from '../contexts/ThemeContext';
 import { supabase } from '../lib/supabase';
 import type { Profile } from '../lib/types';
 
 export function ProfilePage() {
   const { user } = useAuth(); const { notify } = useToast(); const { confirm } = useConfirmDialog(); const { play } = useTransition(); const navigate = useNavigate(); const cameraRef = useRef<HTMLInputElement>(null); const libraryRef = useRef<HTMLInputElement>(null);
+  const { theme, setTheme } = useTheme();
   const [profile, setProfile] = useState<Profile | null>(null); const [name, setName] = useState(''); const [avatarUrl, setAvatarUrl] = useState(''); const [file, setFile] = useState<File | null>(null); const [saving, setSaving] = useState(false); const [photoSourceVisible, setPhotoSourceVisible] = useState(false);
   useEffect(() => { if (!user) return; void (async () => { const { data, error } = await supabase.from('profiles').select('*').eq('user_id', user.id).maybeSingle(); if (error) { notify({ tone: 'error', title: 'Erro ao carregar perfil', message: error.message }); return; } const row = data as Profile | null; setProfile(row); setName(row?.name ?? ''); if (row?.avatar_path) setAvatarUrl((await supabase.storage.from('profile-photos').createSignedUrl(row.avatar_path, 3600)).data?.signedUrl ?? ''); })(); }, [notify, user]);
   useEffect(() => { if (!file) return; const url = URL.createObjectURL(file); setAvatarUrl(url); return () => URL.revokeObjectURL(url); }, [file]);
@@ -20,6 +22,11 @@ export function ProfilePage() {
   async function deleteAccount() { if (!await confirm({ title: 'Excluir sua conta?', message: 'Todas as refeições, fotografias, observações, perfil e histórico serão apagados permanentemente.', confirmLabel: 'Continuar', tone: 'danger' })) return; if (!await confirm({ title: 'Esta ação é definitiva', message: 'Não será possível recuperar sua conta ou suas fotos. Deseja excluir tudo agora?', confirmLabel: 'Excluir tudo', tone: 'danger' })) return; const { error } = await supabase.rpc('delete_own_account'); if (error) return notify({ tone: 'error', title: 'Não foi possível excluir a conta', message: error.message }); await supabase.auth.signOut({ scope: 'local' }); notify({ tone: 'success', title: 'Conta excluída', message: 'Seus dados e fotografias foram removidos.' }); navigate('/auth', { replace: true }); }
   return <div className="page profile-page"><ScreenHeader title="Perfil" /><section className="profile-hero"><button className="profile-avatar" onClick={() => setPhotoSourceVisible(true)}>{avatarUrl ? <img src={avatarUrl} alt="Perfil" /> : <UserRound />}<span><Camera /></span></button><h2>{profile?.name || name}</h2><button className="text-button" onClick={() => setPhotoSourceVisible(true)}>Alterar foto</button><input ref={cameraRef} hidden type="file" accept="image/*" capture="user" onChange={(e) => { setFile(e.target.files?.[0] ?? null); e.target.value = ''; }} /><input ref={libraryRef} hidden type="file" accept="image/*" onChange={(e) => { setFile(e.target.files?.[0] ?? null); e.target.value = ''; }} /></section>
     <section className="panel profile-form"><div className="profile-section-copy"><h2><Leaf /> Dados pessoais</h2><p>Mantenha seus dados sempre atualizados.</p></div><label>Nome<div className="profile-name-input"><UserRound /><input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} /></div></label><label>E-mail<div className="readonly"><Mail />{user?.email}</div></label><button className="primary-button" onClick={() => void save()} disabled={saving}><Check />{saving ? 'Salvando...' : 'Salvar alterações'}</button></section>
+    <section className="panel theme-panel"><div className="profile-section-copy"><h2><Palette /> Alterar tema</h2><p>Escolha as cores do seu diário.</p></div><div className="theme-options" role="radiogroup" aria-label="Tema do aplicativo">{([
+      ['original', 'Original', ['#F3F1E9', '#98AD8E', '#61745B']],
+      ['black', 'Black', ['#090A09', '#202220', '#5F6561']],
+      ['brown', 'Brown', ['#F2E8DA', '#D4AE91', '#74483B']]
+    ] as [ThemeName, string, string[]][]).map(([value, label, swatches]) => <button key={value} type="button" role="radio" aria-checked={theme === value} className={theme === value ? 'theme-option selected' : 'theme-option'} onClick={() => setTheme(value)}><span className="theme-swatches">{swatches.map((color) => <i key={color} style={{ background: color }} />)}</span><span>{label}</span>{theme === value && <Check aria-hidden="true" />}</button>)}</div></section>
     <section className="panel account-panel"><div className="profile-section-copy"><h2><ShieldCheck /> Conta</h2><p>Gerencie sua conta no Diário Alimentar.</p></div><button className="outline-danger" onClick={() => void logout()}><LogOut /> Sair da conta</button><button className="danger-button" onClick={() => void deleteAccount()}><Trash2 /> Excluir conta e todos os dados</button></section><PhotoSourceModal visible={photoSourceVisible} title="Alterar foto" description="Escolha de onde vem sua nova foto de perfil." onClose={() => setPhotoSourceVisible(false)} onCamera={() => cameraRef.current?.click()} onLibrary={() => libraryRef.current?.click()} />
   </div>;
 }

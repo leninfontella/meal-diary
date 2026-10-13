@@ -8,6 +8,7 @@ import { Keyboard, Platform, Pressable, StyleSheet, Text, View, useWindowDimensi
 import { colors, shadow } from '@/constants/theme';
 import { toDateKey } from '@/lib/date';
 import { useNotification } from '@/providers/NotificationProvider';
+import { useTheme } from '@/providers/ThemeProvider';
 
 type Props = { addDate?: string };
 
@@ -24,6 +25,7 @@ export function BottomNavigation({ addDate }: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const { notify } = useNotification();
+  const { name: theme, palette } = useTheme();
   const mealActive = pathname.startsWith('/meal/');
   const [keyboardVisible, setKeyboardVisible] = useState(false);
 
@@ -65,13 +67,13 @@ export function BottomNavigation({ addDate }: Props) {
 
   return (
     <View pointerEvents="box-none" style={[styles.layer, compact && styles.layerCompact]}>
-      <View style={[styles.bar, compact && styles.barCompact]}>
+      <View style={[styles.bar, compact && styles.barCompact, { backgroundColor: palette.nav }]}>
         {items.slice(0, 2).map((item) => {
           const active = item.matches(pathname);
           return (
             <Pressable key={item.route} accessibilityLabel={`Abrir ${item.label}`} onPress={() => router.push(item.route)} style={[styles.item, compact && styles.itemCompact]}>
-              <Ionicons name={active ? item.activeIcon : item.icon} size={23} color={active ? colors.sageDark : '#78856F'} />
-              <Text numberOfLines={1} style={[styles.label, active && styles.activeLabel]}>{item.label}</Text>
+              <Ionicons name={active ? item.activeIcon : item.icon} size={23} color={active ? palette.accent : palette.muted} />
+              <Text numberOfLines={1} style={[styles.label, { color: palette.muted }, active && { color: palette.accent, fontWeight: '700' }]}>{item.label}</Text>
             </Pressable>
           );
         })}
@@ -80,8 +82,8 @@ export function BottomNavigation({ addDate }: Props) {
           const active = item.matches(pathname);
           return (
             <Pressable key={item.route} accessibilityLabel={`Abrir ${item.label}`} onPress={() => router.push(item.route)} style={[styles.item, compact && styles.itemCompact]}>
-              <Ionicons name={active ? item.activeIcon : item.icon} size={24} color={active ? colors.sageDark : '#78856F'} />
-              <Text style={[styles.label, active && styles.activeLabel]}>{item.label}</Text>
+              <Ionicons name={active ? item.activeIcon : item.icon} size={24} color={active ? palette.accent : palette.muted} />
+              <Text style={[styles.label, { color: palette.muted }, active && { color: palette.accent, fontWeight: '700' }]}>{item.label}</Text>
             </Pressable>
           );
         })}
@@ -90,10 +92,10 @@ export function BottomNavigation({ addDate }: Props) {
       <Pressable
         accessibilityLabel="Adicionar refeição"
         onPress={() => void captureNewMeal()}
-        style={({ pressed }) => [styles.addButton, compact && styles.addButtonCompact, mealActive && styles.addButtonActive, pressed && styles.addPressed]}
+        style={({ pressed }) => [styles.addButton, compact && styles.addButtonCompact, { backgroundColor: palette.accent, borderColor: palette.background }, mealActive && { backgroundColor: palette.accent }, pressed && styles.addPressed]}
       >
-        <Ionicons name="camera" size={27} color={colors.white} />
-        <Text style={styles.addLabel}>Adicionar</Text>
+        <Ionicons name="camera" size={27} color={theme === 'black' ? palette.background : colors.white} />
+        <Text style={[styles.addLabel, theme === 'black' && { color: palette.background }]}>Adicionar</Text>
       </Pressable>
     </View>
   );

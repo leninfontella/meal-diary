@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import { AppLayout } from './components/AppLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AuthPage } from './pages/AuthPage';
@@ -9,18 +9,26 @@ import { ProfilePage } from './pages/ProfilePage';
 import { StatisticsPage } from './pages/StatisticsPage';
 import { WelcomePage } from './pages/WelcomePage';
 
+const router = createBrowserRouter([
+  { path: '/', element: <WelcomePage /> },
+  { path: '/auth', element: <AuthPage /> },
+  {
+    element: <ProtectedRoute />,
+    children: [{
+      element: <AppLayout />,
+      children: [
+        { path: '/diary', element: <DiaryPage /> },
+        { path: '/memories', element: <MemoriesPage /> },
+        { path: '/statistics', element: <StatisticsPage /> },
+        { path: '/profile', element: <ProfilePage /> },
+        { path: '/meal/new', element: <MealPage /> },
+        { path: '/meal/:id', element: <MealPage /> },
+      ],
+    }],
+  },
+  { path: '*', element: <Navigate to="/" replace /> },
+]);
+
 export function App() {
-  return <Routes>
-    <Route path="/" element={<WelcomePage />} />
-    <Route path="/auth" element={<AuthPage />} />
-    <Route element={<ProtectedRoute />}><Route element={<AppLayout />}>
-      <Route path="/diary" element={<DiaryPage />} />
-      <Route path="/memories" element={<MemoriesPage />} />
-      <Route path="/statistics" element={<StatisticsPage />} />
-      <Route path="/profile" element={<ProfilePage />} />
-      <Route path="/meal/new" element={<MealPage />} />
-      <Route path="/meal/:id" element={<MealPage />} />
-    </Route></Route>
-    <Route path="*" element={<Navigate to="/" replace />} />
-  </Routes>;
+  return <RouterProvider router={router} />;
 }

@@ -3,12 +3,13 @@ import Head from 'expo-router/head';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { colors } from '@/constants/theme';
 import { AuthProvider } from '@/providers/AuthProvider';
 import { ConfirmDialogProvider } from '@/providers/ConfirmDialogProvider';
 import { NotificationProvider } from '@/providers/NotificationProvider';
+import { ThemeProvider, useTheme } from '@/providers/ThemeProvider';
 
-export default function RootLayout() {
+function AppContent() {
+  const { name, palette } = useTheme();
   const siteUrl = (process.env.EXPO_PUBLIC_SITE_URL ?? 'http://localhost:8081').replace(/\/$/, '');
   const title = 'Diário Alimentar';
   const description = 'Registre suas refeições em um diário alimentar simples e pessoal.';
@@ -19,7 +20,7 @@ export default function RootLayout() {
       <Head>
         <title>{title}</title>
         <meta name="description" content={description} />
-        <meta name="theme-color" content="#365333" />
+        <meta name="theme-color" content={palette.background} />
         <meta name="application-name" content={title} />
         <link rel="icon" href="/favicon.png" type="image/png" />
         <link rel="apple-touch-icon" href="/app-icon.png" />
@@ -41,11 +42,15 @@ export default function RootLayout() {
       <AuthProvider>
         <ConfirmDialogProvider>
           <NotificationProvider>
-            <StatusBar style="dark" />
-            <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }} />
+            <StatusBar style={name === 'black' ? 'light' : 'dark'} />
+            <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: palette.background } }} />
           </NotificationProvider>
         </ConfirmDialogProvider>
       </AuthProvider>
     </SafeAreaProvider>
   );
+}
+
+export default function RootLayout() {
+  return <ThemeProvider><AppContent /></ThemeProvider>;
 }

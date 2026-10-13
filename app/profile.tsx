@@ -29,6 +29,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/providers/AuthProvider';
 import { useConfirmDialog } from '@/providers/ConfirmDialogProvider';
 import { useNotification } from '@/providers/NotificationProvider';
+import { type ThemeName, useTheme } from '@/providers/ThemeProvider';
 
 type Profile = { user_id: string; name: string | null; avatar_path: string | null };
 
@@ -38,6 +39,7 @@ export default function ProfileScreen() {
   const { loading: authLoading, user } = useAuth();
   const { confirm } = useConfirmDialog();
   const { notify } = useNotification();
+  const { name: theme, palette, setTheme } = useTheme();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [name, setName] = useState('');
   const [avatar, setAvatar] = useState<ImagePicker.ImagePickerAsset | null>(null);
@@ -223,9 +225,9 @@ export default function ProfileScreen() {
   const displayedAvatar = avatar?.uri || avatarUrl;
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: palette.background }]}>
       <Animated.View style={[styles.animatedScreen, { opacity }]}>
-        <ImageBackground source={require('../assets/diary-background.png')} resizeMode="cover" style={styles.background}>
+        <ImageBackground source={require('../assets/diary-background.png')} resizeMode="cover" style={[styles.background, { backgroundColor: palette.background }]} imageStyle={{ opacity: theme === 'original' ? 1 : theme === 'brown' ? 0.18 : 0.05 }}>
           <KeyboardAvoidingView style={styles.keyboard} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
             <View style={styles.shell}>
               <ScreenHeader title="Perfil" />
@@ -236,18 +238,18 @@ export default function ProfileScreen() {
                 keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
                 keyboardShouldPersistTaps="handled"
               >
-                <View style={styles.avatarSection}>
+                <View style={[styles.avatarSection, { backgroundColor: palette.surface }]}>
                   <Pressable accessibilityLabel="Alterar foto de perfil" onPress={chooseAvatar} style={styles.avatarButton}>
                     {displayedAvatar ? <Image source={displayedAvatar} style={styles.avatar} contentFit="cover" /> : <View style={styles.avatarFallback}><Ionicons name="person" size={58} color={colors.sageDark} /></View>}
                     <View style={styles.cameraBadge}><Ionicons name="camera" size={19} color={colors.white} /></View>
                   </Pressable>
-                  <Text style={styles.welcome}>{profile?.name ? `, ${profile.name}` : ''}</Text>
+                  <Text style={[styles.welcome, { color: palette.text }]}>{profile?.name ? `, ${profile.name}` : ''}</Text>
 
-                  <Pressable onPress={chooseAvatar} style={styles.changeButton}><Text style={styles.changeText}>Alterar foto</Text></Pressable>
+                  <Pressable onPress={chooseAvatar} style={styles.changeButton}><Text style={[styles.changeText, { color: palette.accent }]}>Alterar foto</Text></Pressable>
                 </View>
 
-                <View style={styles.section}>
-                  <View style={styles.sectionHeader}><View style={styles.sectionIcon}><Ionicons name="leaf-outline" size={25} color={colors.sageDark} /></View><View style={styles.sectionCopy}><Text style={styles.sectionTitle}>Dados pessoais</Text><Text style={styles.sectionDescription}>Mantenha seus dados sempre atualizados.</Text></View></View>
+                <View style={[styles.section, { backgroundColor: palette.surface }]}>
+                  <View style={styles.sectionHeader}><View style={[styles.sectionIcon, { backgroundColor: palette.accentSoft }]}><Ionicons name="leaf-outline" size={25} color={palette.accent} /></View><View style={styles.sectionCopy}><Text style={[styles.sectionTitle, { color: palette.text }]}>Dados pessoais</Text><Text style={[styles.sectionDescription, { color: palette.muted }]}>Mantenha seus dados sempre atualizados.</Text></View></View>
                   <View style={styles.fieldGroup}><Text style={styles.label}>Nome</Text><View style={styles.inputShell}><Ionicons name="person-outline" size={23} color={colors.sageDark} /><TextInput value={name} onChangeText={setName} autoCapitalize="words" maxLength={80} placeholder="Como você quer ser chamado?" placeholderTextColor={colors.muted} style={styles.input} /></View></View>
                   <View style={styles.fieldGroup}><Text style={styles.label}>E-mail</Text><View style={styles.readonly}><Ionicons name="mail-outline" size={23} color={colors.muted} /><Text numberOfLines={1} style={styles.readonlyText}>{user.email}</Text><Ionicons name="lock-closed-outline" size={18} color={colors.muted} /></View></View>
                   <Pressable disabled={saving} onPress={save} style={({ pressed }) => [styles.save, pressed && styles.pressed, saving && styles.disabled]}>
@@ -255,7 +257,16 @@ export default function ProfileScreen() {
                   </Pressable>
                 </View>
 
-                <View style={styles.accountSection}>
+                <View style={[styles.section, { backgroundColor: palette.surface }]}>
+                  <View style={styles.sectionHeader}><View style={[styles.sectionIcon, { backgroundColor: palette.accentSoft }]}><Ionicons name="color-palette-outline" size={25} color={palette.accent} /></View><View style={styles.sectionCopy}><Text style={[styles.sectionTitle, { color: palette.text }]}>Alterar tema</Text><Text style={[styles.sectionDescription, { color: palette.muted }]}>Escolha as cores do seu diário.</Text></View></View>
+                  <View style={styles.themeOptions}>{([
+                    ['original', 'Original', ['#F3F1E9', '#98AD8E', '#61745B']],
+                    ['black', 'Black', ['#090A09', '#202220', '#5F6561']],
+                    ['brown', 'Brown', ['#F2E8DA', '#D4AE91', '#74483B']],
+                  ] as [ThemeName, string, string[]][]).map(([value, label, swatches]) => <Pressable key={value} accessibilityRole="radio" accessibilityState={{ checked: theme === value }} onPress={() => setTheme(value)} style={[styles.themeOption, { borderColor: theme === value ? palette.accent : palette.line, backgroundColor: palette.surface }, theme === value && { borderWidth: 2 }]}><View style={styles.swatches}>{swatches.map((color) => <View key={color} style={[styles.swatch, { backgroundColor: color }]} />)}</View><Text style={[styles.themeLabel, { color: palette.text }]}>{label}</Text>{theme === value && <Ionicons name="checkmark-circle" size={21} color={palette.accent} />}</Pressable>)}</View>
+                </View>
+
+                <View style={[styles.accountSection, { backgroundColor: palette.surface }]}>
                   <View style={styles.sectionHeader}><View style={styles.sectionIcon}><Ionicons name="shield-checkmark-outline" size={25} color={colors.sageDark} /></View><View style={styles.sectionCopy}><Text style={styles.sectionTitle}>Conta</Text><Text style={styles.sectionDescription}>Gerencie sua conta no Diário Alimentar.</Text></View></View>
                   <Pressable disabled={deleting} onPress={() => void confirmLogout()} style={({ pressed }) => [styles.logout, pressed && styles.pressed, deleting && styles.disabled]}><Ionicons name="log-out-outline" size={22} color={colors.danger} /><Text style={styles.logoutText}>Sair da conta</Text></Pressable>
                   <Pressable disabled={deleting} onPress={() => void deleteAccount()} style={({ pressed }) => [styles.deleteAccount, pressed && styles.pressed, deleting && styles.disabled]}>{deleting ? <ActivityIndicator color={colors.white} /> : <><Ionicons name="trash-outline" size={22} color={colors.white} /><Text style={styles.deleteAccountText}>Excluir conta e todos os dados</Text></>}</Pressable>
@@ -315,4 +326,9 @@ const styles = StyleSheet.create({
   deleteAccountText: { color: colors.white, fontSize: 15, fontWeight: '700' },
   pressed: { opacity: 0.8 },
   disabled: { opacity: 0.65 },
+  themeOptions: { gap: 10 },
+  themeOption: { minHeight: 58, borderWidth: 1, borderRadius: 14, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  themeLabel: { flex: 1, fontSize: 15, fontWeight: '700' },
+  swatches: { flexDirection: 'row', overflow: 'hidden', borderRadius: 10 },
+  swatch: { width: 20, height: 32 },
 });

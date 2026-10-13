@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Apple, CalendarDays, Camera, Check, Clock3, Coffee, CookingPot, Image as ImageIcon, Leaf, MoreHorizontal, Trash2, Utensils } from 'lucide-react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useBlocker, useNavigate, useParams } from 'react-router-dom';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { PhotoSourceModal } from '../components/PhotoSourceModal';
 import { useAuth } from '../contexts/AuthContext';
@@ -16,13 +16,24 @@ const mealTypeIcons = { 'Café da manhã': Coffee, 'Almoço': Utensils, 'Lanche'
 export function MealPage() {
   const { id } = useParams(); const { user } = useAuth(); const { notify } = useToast(); const { confirm } = useConfirmDialog(); const navigate = useNavigate();
   const cameraRef = useRef<HTMLInputElement>(null); const libraryRef = useRef<HTMLInputElement>(null);
+  const exitPromptOpen = useRef(false);
   const [initialValues] = useState(() => ({ date: toDateKey(new Date()), time: currentTime() }));
   const [meal, setMeal] = useState<Meal | null>(null); const [file, setFile] = useState<File | null>(() => id ? null : takeDraftPhoto());
   const [preview, setPreview] = useState(''); const [date, setDate] = useState(initialValues.date); const [time, setTime] = useState(initialValues.time);
-  const [type, setType] = useState<MealType | null>(null); const [note, setNote] = useState(''); const [saving, setSaving] = useState(false); const [error, setError] = useState(''); const [photoSourceVisible, setPhotoSourceVisible] = useState(false);
+  const [type, setType] = useState<MealType | null>(null); const [note, setNote] = useState(''); const [saving, setSaving] = useState(false); const [saved, setSaved] = useState(false); const [error, setError] = useState(''); const [photoSourceVisible, setPhotoSourceVisible] = useState(false);
   useEffect(() => { if (!file) return; const url = URL.createObjectURL(file); setPreview(url); return () => URL.revokeObjectURL(url); }, [file]);
   const hasUnsavedChanges = !id && Boolean(file || type || note.trim() || date !== initialValues.date || time !== initialValues.time);
+  const blocker = useBlocker(hasUnsavedChanges && !saved);
   useEffect(() => { const warn = (event: BeforeUnloadEvent) => { if (!hasUnsavedChanges) return; event.preventDefault(); }; window.addEventListener('beforeunload', warn); return () => window.removeEventListener('beforeunload', warn); }, [hasUnsavedChanges]);
+  useEffect(() => {
+    if (blocker.state !== 'blocked' || exitPromptOpen.current) return;
+    exitPromptOpen.current = true;
+    void confirm({ title: 'Sair sem salvar?', message: 'Deseja sair sem salvar esta refeição? A foto e os dados preenchidos serão descartados.', confirmLabel: 'Sair sem salvar', tone: 'danger' }).then((confirmed) => {
+      exitPromptOpen.current = false;
+      if (confirmed) blocker.proceed(); else blocker.reset();
+    });
+  }, [blocker, confirm]);
+  useEffect(() => { if (saved) navigate('/diary', { replace: true }); }, [navigate, saved]);
   useEffect(() => { if (!id) return; void (async () => {
     const { data, error } = await supabase.from('meals').select('*').eq('id', id).single(); if (error || !data) { setError('Não foi possível abrir esta refeição.'); notify({ tone: 'error', title: 'Refeição indisponível', message: 'Não foi possível carregar os dados.' }); return; }
     const row = data as Meal; setMeal(row); setDate(row.meal_date); setTime(row.meal_time.slice(0, 5)); setType(row.meal_type); setNote(row.note ?? '');
@@ -41,7 +52,7 @@ export function MealPage() {
         const { error: insertError } = await supabase.from('meals').insert({ user_id: user.id, meal_date: date, meal_time: time, meal_type: type, note: note.trim() || null, photo_path: path });
         if (insertError) { await supabase.storage.from('meal-photos').remove([path]); throw insertError; }
       }
-      notify({ tone: 'success', title: id ? 'Refeição atualizada' : 'Refeição adicionada', message: id ? 'As alterações foram salvas.' : 'A foto já está no seu diário.' }); navigate('/diary', { replace: true });
+      notify({ tone: 'success', title: id ? 'Refeição atualizada' : 'Refeição adicionada', message: id ? 'As alterações foram salvas.' : 'A foto já está no seu diário.' }); setSaved(true);
     } catch (cause) { const message = cause instanceof Error ? cause.message : 'Não foi possível salvar a refeição.'; setError(message); notify({ tone: 'error', title: 'Erro ao salvar', message }); } finally { setSaving(false); }
   }
   async function remove() {
@@ -51,7 +62,6 @@ export function MealPage() {
     notify({ tone: 'success', title: 'Refeição excluída', message: 'A foto foi removida do diário.' });
   }
   async function goBack() {
-    if (hasUnsavedChanges && !await confirm({ title: 'Sair sem salvar?', message: 'Deseja sair sem salvar esta refeição? A foto e os dados preenchidos serão descartados.', confirmLabel: 'Sair sem salvar', tone: 'danger' })) return;
     navigate(-1);
   }
   const choose = (selected: File | undefined, source: 'camera' | 'library') => { if (!selected) return; setFile(selected); setError(''); notify({ tone: 'success', title: source === 'camera' ? 'Foto adicionada' : 'Foto selecionada', message: source === 'camera' ? 'Agora complete os dados da refeição.' : 'A imagem está pronta para ser salva.' }); };
