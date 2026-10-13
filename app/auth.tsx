@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -80,6 +80,20 @@ export default function AuthScreen() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [messageTone, setMessageTone] = useState<'error' | 'info'>('error');
+  const scrollRef = useRef<ScrollView>(null);
+
+  function restoreViewportAfterBlur() {
+    if (Platform.OS !== 'web') return;
+
+    window.setTimeout(() => {
+      const activeElement = document.activeElement;
+      const anotherFieldIsFocused = activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement;
+      if (anotherFieldIsFocused) return;
+
+      scrollRef.current?.scrollTo({ y: 0, animated: true });
+      resetWebViewport();
+    }, 350);
+  }
 
   async function submit() {
     setMessage('');
@@ -141,6 +155,7 @@ export default function AuthScreen() {
         <ImageBackground source={require('../assets/auth-background.png')} resizeMode="cover" style={styles.background}>
           <KeyboardAvoidingView style={styles.keyboard} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
             <ScrollView
+              ref={scrollRef}
               automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
               contentContainerStyle={styles.page}
               keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
@@ -167,6 +182,7 @@ export default function AuthScreen() {
                       autoCapitalize="words"
                       autoComplete="name"
                       maxLength={80}
+                      onBlur={restoreViewportAfterBlur}
                       placeholder="Seu nome"
                     />
                   )}
@@ -178,6 +194,7 @@ export default function AuthScreen() {
                     autoCapitalize="none"
                     keyboardType="email-address"
                     autoComplete="email"
+                    onBlur={restoreViewportAfterBlur}
                     placeholder="voce@exemplo.com"
                   />
                   <AuthField
@@ -187,6 +204,7 @@ export default function AuthScreen() {
                     onChangeText={setPassword}
                     secureTextEntry={!passwordVisible}
                     autoComplete={isSignUp ? 'new-password' : 'current-password'}
+                    onBlur={restoreViewportAfterBlur}
                     placeholder="Mínimo de 6 caracteres"
                     passwordVisible={passwordVisible}
                     onToggleVisibility={() => setPasswordVisible((value) => !value)}

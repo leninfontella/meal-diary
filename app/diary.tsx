@@ -115,8 +115,7 @@ export default function DiaryScreen() {
   }, [confirm, removeMeal]);
 
   const openMealOptions = useCallback((meal: Meal) => {
-    if (Platform.OS === 'web') return;
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (Platform.OS !== 'web') void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setActionMeal(meal);
   }, []);
 

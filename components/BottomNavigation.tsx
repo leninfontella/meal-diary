@@ -41,10 +41,6 @@ export function BottomNavigation({ addDate }: Props) {
 
   const captureNewMeal = async () => {
     const date = addDate ?? toDateKey(new Date());
-    if (Platform.OS === 'web') {
-      router.push({ pathname: '/meal/new', params: { date } });
-      return;
-    }
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
       notify({ type: 'error', title: 'Acesso à câmera necessário', message: 'Libere a permissão nas configurações do dispositivo.' });
@@ -53,7 +49,7 @@ export function BottomNavigation({ addDate }: Props) {
     const result = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.82 });
     if (result.canceled) return;
     const photo = result.assets[0];
-    void Haptics.selectionAsync();
+    if (Platform.OS !== 'web') void Haptics.selectionAsync();
     router.push({
       pathname: '/meal/new',
       params: {
