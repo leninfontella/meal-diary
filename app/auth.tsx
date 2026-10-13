@@ -119,80 +119,80 @@ export default function AuthScreen() {
     <SafeAreaView style={styles.safe}>
       <Animated.View style={[styles.animatedScreen, { opacity }]}>
         <ImageBackground source={require('../assets/auth-background.png')} resizeMode="cover" style={styles.background}>
-        <KeyboardAvoidingView style={styles.keyboard} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-          <ScrollView
-            automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
-            contentContainerStyle={styles.page}
-            keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
-            <View style={styles.hero}>
-              <View style={styles.mark}><Ionicons name="leaf-outline" size={36} color="#405238" /></View>
-              <Text style={styles.brandTitle}>Diário Alimentar</Text>
-              <Text style={styles.subtitle}>Suas refeições, do seu jeito.</Text>
-              <View style={styles.heroLine} />
-            </View>
-
-            <View style={styles.sheet}>
-              <View style={styles.form}>
-                <Text style={styles.formTitle}>{isSignUp ? 'Crie sua conta' : 'Boas-vindas'}</Text>
-
-                {isSignUp && (
-                  <AuthField
-                    icon="person-outline"
-                    label="Nome"
-                    value={name}
-                    onChangeText={setName}
-                    autoCapitalize="words"
-                    autoComplete="name"
-                    maxLength={80}
-                    placeholder="Seu nome"
-                  />
-                )}
-                <AuthField
-                  icon="mail-outline"
-                  label="E-mail"
-                  value={email}
-                  onChangeText={setEmail}
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                  autoComplete="email"
-                  placeholder="voce@exemplo.com"
-                />
-                <AuthField
-                  icon="lock-closed-outline"
-                  label="Senha"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry={!passwordVisible}
-                  autoComplete={isSignUp ? 'new-password' : 'current-password'}
-                  placeholder="Mínimo de 6 caracteres"
-                  passwordVisible={passwordVisible}
-                  onToggleVisibility={() => setPasswordVisible((value) => !value)}
-                />
-
-                {!!message && <Text style={[styles.message, messageTone === 'info' && styles.messageInfo]}>{message}</Text>}
-
-                <Pressable onPress={submit} disabled={loading} style={({ pressed }) => [styles.primary, pressed && styles.pressed, loading && styles.disabled]}>
-                  <View style={styles.buttonSide} />
-                  {loading ? <ActivityIndicator color={colors.white} /> : <Text style={styles.primaryText}>{isSignUp ? 'Cadastrar' : 'Entrar'}</Text>}
-                  <View style={styles.buttonSide}><Ionicons name="arrow-forward" size={28} color={colors.white} /></View>
-                </Pressable>
-
-                <View style={styles.divider}>
-                  <View style={styles.dividerLine} />
-                  <Ionicons name="leaf-outline" size={25} color="#53684B" />
-                  <View style={styles.dividerLine} />
-                </View>
-
-                <Pressable onPress={switchMode} style={styles.switchButton}>
-                  <Text style={styles.switchText}>{isSignUp ? 'Já tenho uma conta' : 'Ainda não tenho uma conta'}</Text>
-                </Pressable>
+          <KeyboardAvoidingView style={styles.keyboard} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+            <ScrollView
+              automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+              contentContainerStyle={styles.page}
+              keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={styles.hero}>
+                <View style={styles.mark}><Ionicons name="leaf-outline" size={36} color="#405238" /></View>
+                <Text style={styles.brandTitle}>Diário Alimentar</Text>
+                <Text style={styles.subtitle}>Suas refeições, do seu jeito.</Text>
+                <View style={styles.heroLine} />
               </View>
-            </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
+
+              <View style={styles.sheet}>
+                <View style={styles.form}>
+                {isSignUp && <Text style={styles.formTitle}>Crie sua conta</Text>}
+
+                  {isSignUp && (
+                    <AuthField
+                      icon="person-outline"
+                      label="Nome"
+                      value={name}
+                      onChangeText={setName}
+                      autoCapitalize="words"
+                      autoComplete="name"
+                      maxLength={80}
+                      placeholder="Seu nome"
+                    />
+                  )}
+                  <AuthField
+                    icon="mail-outline"
+                    label="E-mail"
+                    value={email}
+                    onChangeText={setEmail}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    autoComplete="email"
+                    placeholder="voce@exemplo.com"
+                  />
+                  <AuthField
+                    icon="lock-closed-outline"
+                    label="Senha"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!passwordVisible}
+                    autoComplete={isSignUp ? 'new-password' : 'current-password'}
+                    placeholder="Mínimo de 6 caracteres"
+                    passwordVisible={passwordVisible}
+                    onToggleVisibility={() => setPasswordVisible((value) => !value)}
+                  />
+
+                  {!!message && <Text style={[styles.message, messageTone === 'info' && styles.messageInfo]}>{message}</Text>}
+
+                  <Pressable onPress={submit} disabled={loading} style={({ pressed }) => [styles.primary, pressed && styles.pressed, loading && styles.disabled]}>
+                    <View style={styles.buttonSide} />
+                    {loading ? <ActivityIndicator color={colors.white} /> : <Text style={styles.primaryText}>{isSignUp ? 'Cadastrar' : 'Entrar'}</Text>}
+                    <View style={styles.buttonSide}><Ionicons name="arrow-forward" size={28} color={colors.white} /></View>
+                  </Pressable>
+
+                  <View style={styles.divider}>
+                    <View style={styles.dividerLine} />
+                    <Ionicons name="leaf-outline" size={25} color="#53684B" />
+                    <View style={styles.dividerLine} />
+                  </View>
+
+                  <Pressable onPress={switchMode} style={styles.switchButton}>
+                    <Text style={styles.switchText}>{isSignUp ? 'Já tenho uma conta' : 'Ainda não tenho uma conta'}</Text>
+                  </Pressable>
+                </View>
+              </View>
+            </ScrollView>
+          </KeyboardAvoidingView>
         </ImageBackground>
       </Animated.View>
     </SafeAreaView>

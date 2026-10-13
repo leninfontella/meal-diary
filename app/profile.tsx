@@ -111,6 +111,12 @@ export default function ProfileScreen() {
       return;
     }
     if (!user) return;
+    const nameChanged = cleanName !== (profile?.name ?? '').trim();
+    const photoChanged = Boolean(avatar);
+    if (!nameChanged && !photoChanged) {
+      notify({ type: 'info', title: 'Perfil atualizado', message: 'Seus dados já estão atualizados.' });
+      return;
+    }
     setSaving(true);
     let newAvatarPath: string | null = null;
     try {
@@ -127,7 +133,12 @@ export default function ProfileScreen() {
         const { data } = await supabase.storage.from('profile-photos').createSignedUrl(newAvatarPath, 3600);
         setAvatarUrl(data?.signedUrl);
       }
-      notify({ type: 'success', title: 'Perfil atualizado', message: 'Seu nome e sua foto foram salvos.' });
+      const successMessage = nameChanged && photoChanged
+        ? 'Seu nome e sua foto foram salvos.'
+        : nameChanged
+          ? 'Seu nome foi salvo.'
+          : 'Sua foto foi atualizada.';
+      notify({ type: 'success', title: 'Perfil atualizado', message: successMessage });
     } catch (error) {
       if (newAvatarPath) await supabase.storage.from('profile-photos').remove([newAvatarPath]);
       notify({ type: 'error', title: 'Não foi possível salvar', message: error instanceof Error ? error.message : 'Tente novamente.' });

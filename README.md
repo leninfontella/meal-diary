@@ -47,6 +47,20 @@ npm run web
 
 Ao alterar `.env`, reinicie o Expo. Para limpar o cache, use `npx expo start -c`.
 
+## Deploy na Vercel
+
+O arquivo `vercel.json` configura o build web do Expo e publica a pasta `dist`.
+No projeto da Vercel, cadastre as variáveis `EXPO_PUBLIC_SUPABASE_URL`,
+`EXPO_PUBLIC_SUPABASE_ANON_KEY` e `EXPO_PUBLIC_SITE_URL` para os ambientes de
+Production e Preview. Depois, faça um novo deploy a partir do commit que contém
+essa configuração.
+
+Para reproduzir o build localmente:
+
+```bash
+npm run build
+```
+
 ## Verificações
 
 ```bash
