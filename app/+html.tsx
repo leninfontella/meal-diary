@@ -19,15 +19,6 @@ export default function RootHtml({ children }: { children: ReactNode }) {
         <style
           dangerouslySetInnerHTML={{
             __html: `
-              @media (max-width: 430px) and (display-mode: browser) {
-                @supports (-webkit-touch-callout: none) {
-                  body {
-                    box-sizing: border-box;
-                    padding-top: max(62px, env(safe-area-inset-top));
-                  }
-                }
-              }
-
               input:-webkit-autofill,
               input:-webkit-autofill:hover,
               input:-webkit-autofill:focus {

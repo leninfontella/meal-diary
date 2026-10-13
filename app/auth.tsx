@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   Animated,
   ImageBackground,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -29,6 +30,19 @@ type AuthFieldProps = TextInputProps & {
   onToggleVisibility?: () => void;
   passwordVisible?: boolean;
 };
+
+function resetWebViewport() {
+  if (Platform.OS !== 'web') return;
+
+  if (document.activeElement instanceof HTMLElement) {
+    document.activeElement.blur();
+  }
+
+  const resetScroll = () => window.scrollTo({ left: 0, top: 0, behavior: 'auto' });
+  resetScroll();
+  window.requestAnimationFrame(resetScroll);
+  window.setTimeout(resetScroll, 300);
+}
 
 function AuthField({ icon, label, onToggleVisibility, passwordVisible, ...props }: AuthFieldProps) {
   return (
@@ -106,8 +120,11 @@ export default function AuthScreen() {
       notify({ type: needsConfirmation ? 'info' : 'success', title: needsConfirmation ? 'Confirme seu e-mail' : 'Conta criada', message: needsConfirmation ? 'Depois da confirmação, volte para fazer login.' : 'Agora entre com os dados cadastrados.', duration: 5000 });
     } else {
       notify({ type: 'success', title: isSignUp ? 'Conta criada' : 'Login realizado', message: 'Seu diário está pronto.' });
+      Keyboard.dismiss();
+      resetWebViewport();
       await fadeOut();
       router.replace('/diary');
+      resetWebViewport();
     }
   }
 

@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
   fieldGroup: { gap: 8 },
   label: { color: colors.ink, fontSize: 15, fontWeight: '600' },
   inputShell: { minHeight: 54, borderWidth: 1, borderColor: colors.line, borderRadius: 12, backgroundColor: 'rgba(255, 255, 255, 0.5)', paddingHorizontal: 15, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  input: { flex: 1, height: 52, color: colors.ink, fontSize: 15, paddingVertical: 0 },
+  input: { flex: 1, height: 52, color: colors.ink, fontSize: 16, paddingVertical: 0 },
   readonly: { minHeight: 54, borderWidth: 1, borderColor: colors.line, borderRadius: 12, backgroundColor: '#ECEAE3', paddingHorizontal: 15, flexDirection: 'row', alignItems: 'center', gap: 12 },
   readonlyText: { flex: 1, color: colors.muted, fontSize: 15 },
   save: { height: 58, borderRadius: 13, backgroundColor: colors.sageDark, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9, marginTop: 2, shadowColor: colors.sageDark, shadowOffset: { width: 0, height: 7 }, shadowOpacity: 0.16, shadowRadius: 12, elevation: 3 },
