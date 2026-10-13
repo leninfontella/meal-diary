@@ -1,0 +1,22 @@
+import { Camera, Check, LogOut, Mail, ShieldCheck, Trash2, UserRound } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ScreenHeader } from '../components/ScreenHeader';
+import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
+import { supabase } from '../lib/supabase';
+import type { Profile } from '../lib/types';
+
+export function ProfilePage() {
+  const { user } = useAuth(); const { notify } = useToast(); const navigate = useNavigate(); const inputRef = useRef<HTMLInputElement>(null);
+  const [profile, setProfile] = useState<Profile | null>(null); const [name, setName] = useState(''); const [avatarUrl, setAvatarUrl] = useState(''); const [file, setFile] = useState<File | null>(null); const [saving, setSaving] = useState(false);
+  useEffect(() => { if (!user) return; void (async () => { const { data } = await supabase.from('profiles').select('*').eq('user_id', user.id).maybeSingle(); const row = data as Profile | null; setProfile(row); setName(row?.name ?? ''); if (row?.avatar_path) setAvatarUrl((await supabase.storage.from('profile-photos').createSignedUrl(row.avatar_path, 3600)).data?.signedUrl ?? ''); })(); }, [user]);
+  useEffect(() => { if (!file) return; const url = URL.createObjectURL(file); setAvatarUrl(url); return () => URL.revokeObjectURL(url); }, [file]);
+  async function save() { if (!user || name.trim().length < 2) return notify({ tone: 'error', title: 'Informe um nome válido' }); setSaving(true); let newPath: string | null = null; try { if (file) { const ext = (file.name.split('.').pop() || 'jpg').replace('jpeg', 'jpg'); newPath = `${user.id}/avatar-${Date.now()}.${ext}`; const { error } = await supabase.storage.from('profile-photos').upload(newPath, file, { contentType: file.type }); if (error) throw error; } const avatarPath = newPath ?? profile?.avatar_path ?? null; const { error } = await supabase.from('profiles').upsert({ user_id: user.id, name: name.trim(), avatar_path: avatarPath }, { onConflict: 'user_id' }); if (error) throw error; await supabase.auth.updateUser({ data: { name: name.trim() } }); if (newPath && profile?.avatar_path) await supabase.storage.from('profile-photos').remove([profile.avatar_path]); setProfile({ user_id: user.id, name: name.trim(), avatar_path: avatarPath }); setFile(null); notify({ tone: 'success', title: 'Perfil atualizado' }); } catch (cause) { notify({ tone: 'error', title: 'Não foi possível salvar', message: cause instanceof Error ? cause.message : '' }); } finally { setSaving(false); } }
+  async function logout() { if (!confirm('Sair da conta?')) return; await supabase.auth.signOut(); navigate('/auth', { replace: true }); }
+  async function deleteAccount() { if (!confirm('Excluir permanentemente sua conta e todos os dados?') || !confirm('Esta ação não pode ser desfeita. Deseja continuar?')) return; const { error } = await supabase.rpc('delete_own_account'); if (error) return notify({ tone: 'error', title: 'Não foi possível excluir', message: error.message }); await supabase.auth.signOut({ scope: 'local' }); }
+  return <div className="page"><ScreenHeader title="Perfil" /><section className="profile-hero"><button className="profile-avatar" onClick={() => inputRef.current?.click()}>{avatarUrl ? <img src={avatarUrl} alt="Perfil" /> : <UserRound />}<span><Camera /></span></button><h2>Olá{profile?.name ? `, ${profile.name}` : ''}!</h2><p>Que bom ter você por aqui.</p><button className="text-button" onClick={() => inputRef.current?.click()}>Alterar foto</button><input ref={inputRef} hidden type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></section>
+    <section className="panel profile-form"><h2><UserRound /> Dados pessoais</h2><label>Nome<input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} /></label><label>E-mail<div className="readonly"><Mail />{user?.email}</div></label><button className="primary-button" onClick={() => void save()} disabled={saving}><Check />{saving ? 'Salvando...' : 'Salvar alterações'}</button></section>
+    <section className="panel account-panel"><h2><ShieldCheck /> Conta</h2><button className="outline-danger" onClick={() => void logout()}><LogOut /> Sair da conta</button><button className="danger-button" onClick={() => void deleteAccount()}><Trash2 /> Excluir conta e todos os dados</button></section>
+  </div>;
+}

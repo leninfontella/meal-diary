@@ -1,6 +1,9 @@
 node_modules/
 .expo/
 dist/
+web/dist/
+web/node_modules/
+web/.env
 .env
 .env.local
 *.jks

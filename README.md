@@ -1,5 +1,18 @@
 # Diário Alimentar
 
+## Versão React web
+
+Uma versão web mobile-first está disponível em `web/`, em paralelo ao aplicativo Expo. Ela usa o mesmo Supabase, tabelas, RLS e buckets de Storage.
+
+```bash
+cd web
+copy .env.example .env
+npm install
+npm run dev
+```
+
+Preencha `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` em `web/.env`. Para publicar separadamente na Vercel, selecione `web` como **Root Directory**; o arquivo `web/vercel.json` já configura o fallback das rotas da SPA.
+
 MVP de diário alimentar em Expo, React Native e TypeScript. O aplicativo usa a mesma base de código no Android, iOS e web, com autenticação, perfil, banco e armazenamento privado no Supabase.
 
 ## Requisitos
