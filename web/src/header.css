@@ -61,6 +61,109 @@ a {
   height: 19px;
 }
 
+.editor-page .editor-panel label,
+.editor-page .editor-panel legend,
+.editor-page .editor-panel input,
+.editor-page .editor-panel textarea,
+.editor-page .photo-picker strong,
+.editor-page .meal-type-chips button,
+.profile-page .profile-form input {
+  color: #292822;
+  font-weight: 400;
+}
+
+.editor-page .screen-header h1 {
+  font-weight: 700;
+}
+
+.editor-page .textarea-wrap textarea::placeholder,
+.auth-form input::placeholder {
+  color: #9b998f;
+  font-size: 13px;
+  font-weight: 400;
+  opacity: 0.72;
+}
+
+.auth-form input:-webkit-autofill,
+.auth-form input:-webkit-autofill:hover,
+.auth-form input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #292822;
+  -webkit-box-shadow: 0 0 0 1000px #f8f7f1 inset;
+  box-shadow: 0 0 0 1000px #f8f7f1 inset;
+  caret-color: #292822;
+}
+
+.memory-backdrop {
+  align-items: center;
+}
+
+.memory-modal {
+  width: min(calc(100% - 10px), 520px);
+}
+
+.memory-modal .close-button {
+  color: #292822;
+  background: rgba(250, 248, 241, 0.92);
+}
+
+.memory-details {
+  display: grid;
+  gap: 18px;
+}
+
+.memory-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.memory-meta > span {
+  min-height: 42px;
+  padding: 0 14px;
+  border-radius: 22px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #61745b;
+  background: #e4e9df;
+}
+
+.memory-meta time {
+  color: #292822;
+  font-size: 18px;
+}
+
+.memory-date {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #292822;
+}
+
+.memory-date svg,
+.memory-meta svg {
+  color: #61745b;
+}
+
+.memory-details blockquote {
+  display: grid;
+  gap: 7px;
+}
+
+.memory-details blockquote strong,
+.memory-details blockquote span {
+  color: #292822;
+  font-weight: 400;
+}
+
+@media (display-mode: standalone) {
+  .app-shell {
+    padding-top: max(env(safe-area-inset-top), 10px);
+  }
+}
+
 .meal-action-sheet {
   gap: 14px;
   padding: 10px 18px 18px;
@@ -156,8 +259,8 @@ a {
   }
 
   .week-card {
-    width: 90%;
-    margin-inline: auto;
+    width: 100%;
+    margin-inline: 0;
     padding: 15px 12px;
     border-radius: 19px;
   }
@@ -286,6 +389,47 @@ a {
     flex: 0 0 auto;
     width: 16px;
     height: 16px;
+  }
+
+  .editor-page .form-input-icon input {
+    font-weight: 400 !important;
+  }
+
+  .editor-page .textarea-wrap textarea::placeholder,
+  .auth-form input::placeholder {
+    font-size: 12px;
+  }
+
+  .memory-backdrop {
+    padding: 14px;
+  }
+
+  .memory-modal {
+    width: 100%;
+    max-height: calc(100dvh - 28px);
+    border-radius: 22px;
+  }
+
+  .memory-modal > img {
+    aspect-ratio: 1.08;
+  }
+
+  .memory-modal > .memory-details {
+    padding: 17px;
+    gap: 15px;
+  }
+
+  .memory-meta > span {
+    min-height: 36px;
+    padding-inline: 11px;
+  }
+
+  .memory-meta time {
+    font-size: 16px;
+  }
+
+  .memory-details blockquote {
+    padding: 13px;
   }
 }
 
