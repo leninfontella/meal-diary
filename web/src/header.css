@@ -8,22 +8,57 @@ a {
 }
 
 .screen-header {
-  position: fixed;
+  position: sticky;
   top: 0;
-  left: 50%;
-  width: min(100%, 680px);
-  margin-inline: 0;
+  left: auto;
+  width: auto;
+  margin-inline: calc(var(--page-gutter) * -1);
   padding-inline: var(--page-gutter);
-  opacity: 0;
-  pointer-events: none;
-  transform: translate(-50%, -110%);
-  transition: opacity 180ms ease, transform 220ms ease;
-}
-
-.screen-header.is-visible {
   opacity: 1;
   pointer-events: auto;
-  transform: translate(-50%, 0);
+  transform: none;
+  background: rgba(247, 245, 237, 0.08);
+  border-bottom-color: rgba(228, 224, 213, 0.12);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.form-input-icon {
+  height: 54px;
+  padding-inline: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #e4e0d5;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.6);
+  color: #61745b;
+}
+
+.editor-panel .form-input-icon input {
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.form-input-icon input::-webkit-calendar-picker-indicator {
+  width: 0;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+}
+
+.meal-type-chips button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.meal-type-chips button svg {
+  width: 19px;
+  height: 19px;
 }
 
 .meal-action-sheet {
@@ -230,11 +265,33 @@ a {
   .meal-action-sheet > button strong {
     font-size: 14px;
   }
+
+  .editor-page .form-row {
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .editor-page .form-row label {
+    gap: 5px;
+    font-size: 11px;
+  }
+
+  .form-input-icon {
+    height: 40px;
+    gap: 6px;
+    padding-inline: 8px;
+  }
+
+  .form-input-icon > svg {
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+  }
 }
 
 @media (min-width: 720px) {
   .screen-header {
-    top: 18px;
+    top: 0;
   }
 }
 

@@ -1,4 +1,4 @@
-import { Camera, Check, Image as ImageIcon, Leaf, Trash2 } from 'lucide-react';
+import { Apple, CalendarDays, Camera, Check, Clock3, Coffee, CookingPot, Image as ImageIcon, Leaf, MoreHorizontal, Trash2, Utensils } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ScreenHeader } from '../components/ScreenHeader';
@@ -10,6 +10,8 @@ import { currentTime, toDateKey } from '../lib/date';
 import { takeDraftPhoto } from '../lib/draftPhoto';
 import { supabase } from '../lib/supabase';
 import { mealTypes, type Meal, type MealType } from '../lib/types';
+
+const mealTypeIcons = { 'Café da manhã': Coffee, 'Almoço': Utensils, 'Lanche': Apple, 'Jantar': CookingPot, 'Outro': MoreHorizontal };
 
 export function MealPage() {
   const { id } = useParams(); const { user } = useAuth(); const { notify } = useToast(); const { confirm } = useConfirmDialog(); const navigate = useNavigate();
@@ -58,8 +60,8 @@ export function MealPage() {
       {!id && preview && <div className="photo-actions"><button type="button" onClick={() => setPhotoSourceVisible(true)}><ImageIcon /> Trocar foto</button></div>}
       <input ref={cameraRef} hidden type="file" accept="image/*" capture="environment" onChange={(e) => { choose(e.target.files?.[0]); e.target.value = ''; }} />
       <input ref={libraryRef} hidden type="file" accept="image/*" onChange={(e) => { choose(e.target.files?.[0]); e.target.value = ''; }} />
-      <div className="form-row"><label>Data<input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></label><label>Horário<input type="time" value={time} onChange={(e) => setTime(e.target.value)} /></label></div>
-      <fieldset><legend>Tipo de refeição <small>opcional</small></legend><div className="chips">{mealTypes.map((item) => <button type="button" key={item} className={type === item ? 'active' : ''} onClick={() => setType(type === item ? null : item)}>{item}</button>)}</div></fieldset>
+      <div className="form-row"><label>Data<div className="form-input-icon"><CalendarDays /><input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div></label><label>Horário<div className="form-input-icon"><Clock3 /><input type="time" value={time} onChange={(e) => setTime(e.target.value)} /></div></label></div>
+      <fieldset><legend>Tipo de refeição <small>opcional</small></legend><div className="chips meal-type-chips">{mealTypes.map((item) => { const Icon = mealTypeIcons[item]; return <button type="button" key={item} className={type === item ? 'active' : ''} onClick={() => setType(type === item ? null : item)}><Icon />{item}</button>; })}</div></fieldset>
       <label>Observação<div className="textarea-wrap"><Leaf /><textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} placeholder="Como estava a refeição?" /></div></label>
       {error && <p className="form-error">{error}</p>}<button className="primary-button" disabled={saving}><Check />{saving ? 'Salvando...' : 'Salvar refeição'}</button>
     </form><PhotoSourceModal visible={photoSourceVisible} title={preview ? 'Trocar foto' : 'Adicionar foto'} description="Escolha como deseja adicionar a fotografia da refeição." onClose={() => setPhotoSourceVisible(false)} onCamera={() => cameraRef.current?.click()} onLibrary={() => libraryRef.current?.click()} />
