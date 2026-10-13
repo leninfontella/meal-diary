@@ -3,7 +3,8 @@ import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { Redirect, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Animated, ImageBackground, Modal, Platform, Pressable, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Animated, ImageBackground, Modal, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { MealCard } from '@/components/MealCard';
 import { BottomNavigation } from '@/components/BottomNavigation';
@@ -19,6 +20,8 @@ import { useConfirmDialog } from '@/providers/ConfirmDialogProvider';
 import { useNotification } from '@/providers/NotificationProvider';
 
 export default function DiaryScreen() {
+  const { width } = useWindowDimensions();
+  const compact = width <= 430;
   const router = useRouter();
   const { opacity } = useScreenFade();
   const { loading: authLoading, user } = useAuth();
@@ -133,7 +136,7 @@ export default function DiaryScreen() {
         <ImageBackground source={require('../assets/diary-background.png')} resizeMode="cover" style={styles.background}>
         <View style={styles.shell}>
           <ScrollView
-            contentContainerStyle={styles.content}
+            contentContainerStyle={[styles.content, compact && styles.contentCompact]}
             refreshControl={<RefreshControl refreshing={loading && meals.length > 0} onRefresh={() => void Promise.all([loadMeals(), loadRecordedDates()])} tintColor={colors.sageDark} />}
             showsVerticalScrollIndicator={false}
           >
@@ -151,7 +154,7 @@ export default function DiaryScreen() {
 
             <WeekCalendar markedDates={recordedDates} selected={selected} onSelect={setSelected} />
 
-            <View style={styles.summary}>
+            <View style={[styles.summary, compact && styles.summaryCompact]}>
               <View style={styles.summaryIcon}><Ionicons name="leaf" size={22} color={colors.sageDark} /></View>
               <Text style={styles.summaryText}>{mealCountText}</Text>
               <Ionicons name="chevron-forward" size={22} color={colors.sageDark} />
@@ -164,7 +167,7 @@ export default function DiaryScreen() {
             ) : meals.length === 0 ? (
               <View style={styles.empty}><View style={styles.emptyIcon}><Ionicons name="restaurant-outline" size={31} color={colors.sageDark} /></View><Text style={styles.emptyTitle}>Nenhuma refeição neste dia</Text><Text style={styles.emptyText}>Toque na câmera para adicionar a primeira.</Text></View>
             ) : (
-              <View style={styles.list}>{meals.map((meal) => <MealCard key={meal.id} meal={meal} onLongPress={() => openMealOptions(meal)} onPress={() => router.push({ pathname: '/meal/[id]', params: { id: meal.id } })} />)}</View>
+              <View style={styles.list}>{meals.map((meal) => <MealCard fullWidth={compact} key={meal.id} meal={meal} onLongPress={() => openMealOptions(meal)} onPress={() => router.push({ pathname: '/meal/[id]', params: { id: meal.id } })} />)}</View>
             )}
 
           </ScrollView>
@@ -198,6 +201,7 @@ const styles = StyleSheet.create({
   background: { flex: 1, width: '100%' },
   shell: { flex: 1, width: '100%', maxWidth: 720, alignSelf: 'center' },
   content: { flexGrow: 1, paddingHorizontal: 27, paddingTop: 25, paddingBottom: 118 },
+  contentCompact: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 102 },
   header: { paddingTop: 4 },
   headerTop: { minHeight: 62, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   headerCopy: { flex: 1, paddingRight: 12, gap: 3 },
@@ -206,6 +210,7 @@ const styles = StyleSheet.create({
   avatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#E3E7DA', alignItems: 'center', justifyContent: 'center' },
   avatarImage: { width: '100%', height: '100%', borderRadius: 24 },
   summary: { alignSelf: 'flex-start', minWidth: 245, height: 52, borderRadius: 26, backgroundColor: 'rgba(235, 236, 227, 0.9)', paddingHorizontal: 17, flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 18, marginBottom: 20 },
+  summaryCompact: { alignSelf: 'stretch', minWidth: 0, height: 48, marginTop: 14, marginBottom: 16 },
   summaryIcon: { width: 28, alignItems: 'center' },
   summaryText: { flex: 1, color: '#3C5237', fontSize: 15 },
   list: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 16 },

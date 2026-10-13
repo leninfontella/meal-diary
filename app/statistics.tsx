@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState, type ReactNode } from 'react';
-import { ActivityIndicator, ImageBackground, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ImageBackground, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BottomNavigation } from '@/components/BottomNavigation';
 import { ScreenLoader } from '@/components/ScreenLoader';

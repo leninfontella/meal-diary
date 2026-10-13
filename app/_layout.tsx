@@ -11,7 +11,7 @@ import { NotificationProvider } from '@/providers/NotificationProvider';
 export default function RootLayout() {
   const siteUrl = (process.env.EXPO_PUBLIC_SITE_URL ?? 'http://localhost:8081').replace(/\/$/, '');
   const title = 'Diário Alimentar';
-  const description = 'Registre suas refeições, fotos e observações em um diário alimentar simples e pessoal.';
+  const description = 'Registre suas refeições em um diário alimentar simples e pessoal.';
   const socialImage = `${siteUrl}/social-share.png`;
 
   return (

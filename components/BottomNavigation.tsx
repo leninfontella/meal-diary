@@ -3,7 +3,7 @@ import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
 import { usePathname, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Keyboard, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Keyboard, Platform, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { colors, shadow } from '@/constants/theme';
 import { toDateKey } from '@/lib/date';
@@ -19,6 +19,8 @@ const items = [
 ] as const;
 
 export function BottomNavigation({ addDate }: Props) {
+  const { width } = useWindowDimensions();
+  const compact = width <= 430;
   const pathname = usePathname();
   const router = useRouter();
   const { notify } = useNotification();
@@ -66,22 +68,22 @@ export function BottomNavigation({ addDate }: Props) {
   };
 
   return (
-    <View pointerEvents="box-none" style={styles.layer}>
-      <View style={styles.bar}>
+    <View pointerEvents="box-none" style={[styles.layer, compact && styles.layerCompact]}>
+      <View style={[styles.bar, compact && styles.barCompact]}>
         {items.slice(0, 2).map((item) => {
           const active = item.matches(pathname);
           return (
-            <Pressable key={item.route} accessibilityLabel={`Abrir ${item.label}`} onPress={() => router.push(item.route)} style={styles.item}>
+            <Pressable key={item.route} accessibilityLabel={`Abrir ${item.label}`} onPress={() => router.push(item.route)} style={[styles.item, compact && styles.itemCompact]}>
               <Ionicons name={active ? item.activeIcon : item.icon} size={23} color={active ? colors.sageDark : '#78856F'} />
               <Text numberOfLines={1} style={[styles.label, active && styles.activeLabel]}>{item.label}</Text>
             </Pressable>
           );
         })}
-        <View style={styles.addSpace} />
+        <View style={[styles.addSpace, compact && styles.addSpaceCompact]} />
         {items.slice(2).map((item) => {
           const active = item.matches(pathname);
           return (
-            <Pressable key={item.route} accessibilityLabel={`Abrir ${item.label}`} onPress={() => router.push(item.route)} style={styles.item}>
+            <Pressable key={item.route} accessibilityLabel={`Abrir ${item.label}`} onPress={() => router.push(item.route)} style={[styles.item, compact && styles.itemCompact]}>
               <Ionicons name={active ? item.activeIcon : item.icon} size={24} color={active ? colors.sageDark : '#78856F'} />
               <Text style={[styles.label, active && styles.activeLabel]}>{item.label}</Text>
             </Pressable>
@@ -92,7 +94,7 @@ export function BottomNavigation({ addDate }: Props) {
       <Pressable
         accessibilityLabel="Adicionar refeição"
         onPress={() => void captureNewMeal()}
-        style={({ pressed }) => [styles.addButton, mealActive && styles.addButtonActive, pressed && styles.addPressed]}
+        style={({ pressed }) => [styles.addButton, compact && styles.addButtonCompact, mealActive && styles.addButtonActive, pressed && styles.addPressed]}
       >
         <Ionicons name="camera" size={27} color={colors.white} />
         <Text style={styles.addLabel}>Adicionar</Text>
@@ -103,12 +105,17 @@ export function BottomNavigation({ addDate }: Props) {
 
 const styles = StyleSheet.create({
   layer: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 96 },
+  layerCompact: { height: 84 },
   bar: { position: 'absolute', left: 14, right: 14, bottom: 8, height: 72, borderRadius: 24, backgroundColor: 'rgba(255, 255, 255, 0.96)', paddingHorizontal: 7, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', ...shadow },
+  barCompact: { left: 8, right: 8, bottom: 6, height: 64, borderRadius: 21, paddingHorizontal: 3 },
   item: { flex: 1, height: 58, alignItems: 'center', justifyContent: 'center', gap: 2 },
+  itemCompact: { height: 52 },
   label: { color: '#78856F', fontSize: 9.5 },
   activeLabel: { color: colors.sageDark, fontWeight: '700' },
   addSpace: { width: 72 },
+  addSpaceCompact: { width: 64 },
   addButton: { position: 'absolute', bottom: 15, left: '50%', marginLeft: -37, width: 74, height: 74, borderRadius: 37, backgroundColor: '#78976C', borderWidth: 5, borderColor: '#F4F3EB', alignItems: 'center', justifyContent: 'center', ...shadow },
+  addButtonCompact: { bottom: 11, marginLeft: -33, width: 66, height: 66, borderRadius: 33, borderWidth: 4 },
   addButtonActive: { backgroundColor: colors.sageDark },
   addPressed: { transform: [{ scale: 0.96 }] },
   addLabel: { color: colors.white, fontSize: 10.5, fontWeight: '600', marginTop: 1 },

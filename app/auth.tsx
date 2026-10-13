@@ -8,14 +8,15 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TextInputProps,
   View,
+  useWindowDimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors } from '@/constants/theme';
 import { useScreenFade } from '@/hooks/useScreenFade';
@@ -52,6 +53,8 @@ function AuthField({ icon, label, onToggleVisibility, passwordVisible, ...props 
 }
 
 export default function AuthScreen() {
+  const { height, width } = useWindowDimensions();
+  const compact = width <= 430 || height <= 760;
   const router = useRouter();
   const { opacity, fadeOut } = useScreenFade();
   const { notify } = useNotification();
@@ -127,15 +130,15 @@ export default function AuthScreen() {
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
             >
-              <View style={styles.hero}>
-                <View style={styles.mark}><Ionicons name="leaf-outline" size={36} color="#405238" /></View>
-                <Text style={styles.brandTitle}>Diário Alimentar</Text>
+              <View style={[styles.hero, compact && styles.heroCompact]}>
+                <View style={[styles.mark, compact && styles.markCompact]}><Ionicons name="leaf-outline" size={compact ? 30 : 36} color="#405238" /></View>
+                <Text style={[styles.brandTitle, compact && styles.brandTitleCompact]}>Diário Alimentar</Text>
                 <Text style={styles.subtitle}>Suas refeições, do seu jeito.</Text>
                 <View style={styles.heroLine} />
               </View>
 
-              <View style={styles.sheet}>
-                <View style={styles.form}>
+              <View style={[styles.sheet, compact && styles.sheetCompact]}>
+                <View style={[styles.form, compact && styles.formCompact]}>
                 {isSignUp && <Text style={styles.formTitle}>Crie sua conta</Text>}
 
                   {isSignUp && (
@@ -206,12 +209,17 @@ const styles = StyleSheet.create({
   keyboard: { flex: 1 },
   page: { flexGrow: 1, width: '100%', maxWidth: 680, alignSelf: 'center' },
   hero: { height: 330, alignItems: 'center', justifyContent: 'flex-end', paddingHorizontal: 20, paddingBottom: 34 },
+  heroCompact: { height: 225, paddingBottom: 24 },
   mark: { width: 76, height: 76, borderRadius: 38, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F0F0E5', marginBottom: 18 },
+  markCompact: { width: 60, height: 60, borderRadius: 30, marginBottom: 13 },
   brandTitle: { color: '#F8F6EF', fontSize: 30, fontWeight: '600', letterSpacing: 0, textAlign: 'center' },
+  brandTitleCompact: { fontSize: 26 },
   subtitle: { color: '#D9DDCF', fontSize: 15, marginTop: 8, textAlign: 'center' },
   heroLine: { width: 46, height: 2, borderRadius: 1, backgroundColor: '#809172', marginTop: 22 },
   sheet: { flexGrow: 1, minHeight: 560, borderTopLeftRadius: 42, borderTopRightRadius: 42, backgroundColor: 'rgba(249, 247, 240, 0.96)', overflow: 'hidden' },
+  sheetCompact: { minHeight: 470, borderTopLeftRadius: 32, borderTopRightRadius: 32 },
   form: { width: '100%', maxWidth: 560, alignSelf: 'center', paddingHorizontal: 34, paddingTop: 39, paddingBottom: 68, gap: 21 },
+  formCompact: { paddingHorizontal: 22, paddingTop: 28, paddingBottom: 40, gap: 16 },
   formTitle: { color: '#20211E', fontSize: 24, fontWeight: '600', letterSpacing: 0, marginBottom: 5 },
   fieldGroup: { gap: 8 },
   label: { color: '#44593D', fontSize: 15, fontWeight: '600' },

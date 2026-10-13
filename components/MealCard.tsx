@@ -5,11 +5,11 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, shadow } from '@/constants/theme';
 import type { Meal } from '@/lib/types';
 
-type Props = { meal: Meal; onPress: () => void; onLongPress?: () => void };
+type Props = { meal: Meal; onPress: () => void; onLongPress?: () => void; fullWidth?: boolean };
 
-export function MealCard({ meal, onPress, onLongPress }: Props) {
+export function MealCard({ meal, onPress, onLongPress, fullWidth = false }: Props) {
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={`Abrir ${meal.meal_type ?? 'refeição'}`} delayLongPress={450} onLongPress={onLongPress} onPress={onPress} style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
+    <Pressable accessibilityRole="button" accessibilityLabel={`Abrir ${meal.meal_type ?? 'refeição'}`} delayLongPress={450} onLongPress={onLongPress} onPress={onPress} style={({ pressed }) => [styles.card, fullWidth && styles.fullWidth, pressed && styles.pressed]}>
       <Image source={meal.imageUrl} style={styles.image} contentFit="cover" transition={180} />
       <View style={styles.details}>
         <View style={styles.copy}>
@@ -24,6 +24,7 @@ export function MealCard({ meal, onPress, onLongPress }: Props) {
 
 const styles = StyleSheet.create({
   card: { width: '48.3%', borderRadius: 12, overflow: 'hidden', backgroundColor: 'rgba(255, 255, 255, 0.94)', ...shadow },
+  fullWidth: { width: '100%' },
   pressed: { opacity: 0.84 },
   image: { width: '100%', aspectRatio: 1.06, backgroundColor: colors.sageLight },
   details: { minHeight: 64, paddingHorizontal: 12, paddingVertical: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
