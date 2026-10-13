@@ -2,13 +2,14 @@ import { ChevronLeft, ChevronRight, Leaf, MoreVertical, UserRound } from 'lucide
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useConfirmDialog } from '../contexts/ConfirmDialogContext';
 import { useToast } from '../contexts/ToastContext';
 import { getWeek, monthName, toDateKey } from '../lib/date';
 import { supabase } from '../lib/supabase';
 import type { Meal } from '../lib/types';
 
 export function DiaryPage() {
-  const { user } = useAuth(); const { notify } = useToast(); const navigate = useNavigate();
+  const { user } = useAuth(); const { notify } = useToast(); const { confirm } = useConfirmDialog(); const navigate = useNavigate();
   const [selected, setSelected] = useState(new Date()); const [meals, setMeals] = useState<Meal[]>([]);
   const [recorded, setRecorded] = useState(new Set<string>()); const [name, setName] = useState(''); const [avatar, setAvatar] = useState('');
   const [loading, setLoading] = useState(true); const [menuMeal, setMenuMeal] = useState<Meal | null>(null);
@@ -30,7 +31,7 @@ export function DiaryPage() {
   useEffect(() => { void load(); }, [load]);
   const moveWeek = (days: number) => setSelected((current) => { const next = new Date(current); next.setDate(next.getDate() + days); return next; });
   async function remove(meal: Meal) {
-    if (!confirm('Excluir esta refeição e sua fotografia?')) return;
+    if (!await confirm({ title: 'Excluir publicação?', message: 'A fotografia e a observação serão removidas definitivamente.', confirmLabel: 'Excluir', tone: 'danger' })) return;
     const { error } = await supabase.from('meals').delete().eq('id', meal.id); if (error) return notify({ tone: 'error', title: 'Não foi possível excluir', message: error.message });
     await supabase.storage.from('meal-photos').remove([meal.photo_path]); setMenuMeal(null); void load();
   }

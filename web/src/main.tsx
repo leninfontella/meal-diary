@@ -4,8 +4,9 @@ import { BrowserRouter } from 'react-router-dom';
 import { registerSW } from 'virtual:pwa-register';
 import { App } from './App';
 import { AuthProvider } from './contexts/AuthContext';
+import { ConfirmDialogProvider } from './contexts/ConfirmDialogContext';
 import { ToastProvider } from './contexts/ToastContext';
 import './styles.css';
 
 registerSW({ immediate: true });
-createRoot(document.getElementById('root')!).render(<StrictMode><BrowserRouter><AuthProvider><ToastProvider><App /></ToastProvider></AuthProvider></BrowserRouter></StrictMode>);
+createRoot(document.getElementById('root')!).render(<StrictMode><BrowserRouter><AuthProvider><ConfirmDialogProvider><ToastProvider><App /></ToastProvider></ConfirmDialogProvider></AuthProvider></BrowserRouter></StrictMode>);
