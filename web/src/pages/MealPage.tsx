@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Apple, CalendarDays, Camera, Check, Clock3, Coffee, CookingPot, Image as ImageIcon, Leaf, MoreHorizontal, Trash2, Utensils } from 'lucide-react';
 import { useBlocker, useNavigate, useParams } from 'react-router-dom';
+import { PhotoCropModal } from '../components/PhotoCropModal';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { PhotoSourceModal } from '../components/PhotoSourceModal';
 import { useAuth } from '../contexts/AuthContext';
@@ -21,6 +22,7 @@ export function MealPage() {
   const [meal, setMeal] = useState<Meal | null>(null); const [file, setFile] = useState<File | null>(() => id ? null : takeDraftPhoto());
   const [preview, setPreview] = useState(''); const [date, setDate] = useState(initialValues.date); const [time, setTime] = useState(initialValues.time);
   const [type, setType] = useState<MealType | null>(null); const [note, setNote] = useState(''); const [saving, setSaving] = useState(false); const [saved, setSaved] = useState(false); const [error, setError] = useState(''); const [photoSourceVisible, setPhotoSourceVisible] = useState(false);
+  const [photoToCrop, setPhotoToCrop] = useState<{ file: File; source: 'camera' | 'library' } | null>(null);
   useEffect(() => { if (!file) return; const url = URL.createObjectURL(file); setPreview(url); return () => URL.revokeObjectURL(url); }, [file]);
   const hasUnsavedChanges = !id && Boolean(file || type || note.trim() || date !== initialValues.date || time !== initialValues.time);
   const blocker = useBlocker(hasUnsavedChanges && !saved);
@@ -64,7 +66,12 @@ export function MealPage() {
   async function goBack() {
     navigate(-1);
   }
-  const choose = (selected: File | undefined, source: 'camera' | 'library') => { if (!selected) return; setFile(selected); setError(''); notify({ tone: 'success', title: source === 'camera' ? 'Foto adicionada' : 'Foto selecionada', message: source === 'camera' ? 'Agora complete os dados da refeição.' : 'A imagem está pronta para ser salva.' }); };
+  const choose = (selected: File | undefined, source: 'camera' | 'library') => { if (selected) setPhotoToCrop({ file: selected, source }); };
+  const acceptCrop = (selected: File) => {
+    const source = photoToCrop?.source ?? 'library';
+    setFile(selected); setPhotoToCrop(null); setError('');
+    notify({ tone: 'success', title: source === 'camera' ? 'Foto ajustada' : 'Foto selecionada', message: 'O enquadramento está pronto para ser salvo.' });
+  };
   return <div className="page editor-page"><ScreenHeader back onBack={() => void goBack()} title={id ? 'Sua refeição' : 'Nova refeição'} action={id ? <button className="icon-button danger" onClick={() => void remove()}><Trash2 /></button> : null} />
     <form className="editor-panel" onSubmit={save}>
       <button type="button" className={`photo-picker ${preview ? 'filled' : ''}`} onClick={() => !id && setPhotoSourceVisible(true)}>{preview ? <img src={preview} alt="Refeição" /> : <><span><Camera /></span><strong>Adicionar foto</strong><small>Câmera ou galeria</small></>}</button>
@@ -76,5 +83,6 @@ export function MealPage() {
       <label>Observação<div className="textarea-wrap"><Leaf /><textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} placeholder="Como estava a refeição?" /></div></label>
       {error && <p className="form-error">{error}</p>}<button className="primary-button" disabled={saving}><Check />{saving ? 'Salvando...' : 'Salvar refeição'}</button>
     </form><PhotoSourceModal visible={photoSourceVisible} title={preview ? 'Trocar foto' : 'Adicionar foto'} description="Escolha como deseja adicionar a fotografia da refeição." onClose={() => setPhotoSourceVisible(false)} onCamera={() => cameraRef.current?.click()} onLibrary={() => libraryRef.current?.click()} />
+    <PhotoCropModal file={photoToCrop?.file ?? null} onCancel={() => setPhotoToCrop(null)} onConfirm={acceptCrop} />
   </div>;
 }
